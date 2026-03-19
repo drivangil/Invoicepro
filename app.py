@@ -2,15 +2,12 @@ import os
 import sys
 import subprocess
 import platform
-from flask import Flask, render_template, jsonify, send_file, request
+from flask import Flask, render_template, jsonify, send_file, request, session
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
+app.secret_key = 'invoice-processor-secret-key-12345'
 EXCEL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'facturas.xlsx')
-
-# Contadores de sesión para el tablero
-session_pending_count = 0
-session_processed_count = 0
 
 @app.route('/open-excel')
 def open_excel():
@@ -55,6 +52,9 @@ def count_files(directory):
 
 @app.route('/')
 def index():
+    # Resetear contadores al cargar la página (según requerimiento)
+    session['pending'] = 0
+    session['processed'] = 0
     return render_template('index.html')
 
 @app.route('/status')
@@ -62,21 +62,22 @@ def status():
     # Debug para confirmar ruta
     print(f"DEBUG: Revisando PENDIENTES en {NO_PROCESADOS_DIR}")
     return jsonify({
-        'no_procesados': session_pending_count,
-        'procesados': session_processed_count
+        'no_procesados': session.get('pending', 0),
+        'procesados': session.get('processed', 0)
     })
 
 @app.route('/process', methods=['POST'])
 def process():
-    global session_processed_count, session_pending_count
     try:
         # Ejecutar la skill (procesa nuevos y actualiza Excel)
         newly_processed = process_invoices.main()
         
         # Actualizar contadores de sesión
         count = len(newly_processed)
-        session_processed_count += count
-        session_pending_count = max(0, session_pending_count - count)
+        session['processed'] = session.get('processed', 0) + count
+        
+        # Llevar a 0 el pendiente (Quitar de memoria las no procesadas)
+        session['pending'] = 0
         
         # Obtener los registros actualizados (lista simple ordenada por vencimiento)
         all_records = process_invoices.get_grouped_records()
@@ -95,7 +96,6 @@ def process():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
-    global session_pending_count
     if 'files' not in request.files:
         return jsonify({"success": False, "message": "No se enviaron archivos"}), 400
     
@@ -112,7 +112,7 @@ def upload_files():
             file.save(os.path.join(NO_PROCESADOS_DIR, filename))
             count += 1
             
-    session_pending_count += count
+    session['pending'] = session.get('pending', 0) + count
             
     return jsonify({
         "success": True, 
