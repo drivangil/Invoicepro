@@ -1,0 +1,47 @@
+MANUAL DE USUARIO - INVOICE PROCESSOR PRO
+
+Este manual explica cómo operar la aplicación tanto en la nube (Render) como en tu computadora local.
+
+---
+
+1. USO ONLINE (Desde cualquier dispositivo)
+
+Esta es la forma recomendada para que tu esposa (Mac), tu hija (Windows) y amigos (Móviles) usen la app.
+
+Acceso:
+1. Abre el navegador en tu dispositivo.
+2. Ingresa a la URL de Render (ej. https://invoicepro.onrender.com).
+
+Pasos para procesar:
+1. Subir Facturas: Haz clic en el botón azul "Subir Facturas". Selecciona las fotos de las facturas desde tu galería o archivos.
+2. Verificar Pendientes: El contador PENDIENTES mostrará cuántas imágenes acabas de subir.
+3. Procesar: Haz clic en el botón morado "Iniciar Procesamiento".
+4. Resultados: 
+   - El contador PROCESADAS mostrará el éxito de la operación.
+   - Aparecerá una tabla con el detalle extraído (Suplidor, NCF, Vencimiento, etc.).
+5. Descargar Reporte: Haz clic en "Descargar Excel" para bajar el reporte actualizado a tu dispositivo.
+
+IMPORTANTE: En la versión gratuita de Render, los archivos subidos se borran si la app se reinicia. Descarga siempre tu Excel al terminar de procesar para guardar tus cambios.
+
+---
+
+2. USO LOCAL (Desde tu computadora)
+
+Útil para administrar los archivos directamente y abrir el Excel automáticamente.
+
+Inicio de la App:
+1. Abre una terminal (PowerShell o CMD) en la carpeta del proyecto.
+2. Ejecuta el comando: python app.py
+3. Abre tu navegador en la dirección: http://localhost:5000
+
+Ventajas del Modo Local:
+- Persistencia Real: Todos los archivos que subas o proceses se guardan permanentemente en las carpetas NO PROCESADOS y PROCESADOS de tu computadora.
+- Botón "Abrir Local": Junto al botón de descarga, verás el botón "Abrir Local". Al presionarlo, se abrirá automáticamente el archivo facturas.xlsx en Excel sin tener que descargarlo.
+- Carga de Archivos Manual: Además de usar el botón de la web, puedes simplemente copiar tus fotos directamente a la carpeta NO PROCESADOS en tu explorador de archivos y luego darle a "Iniciar Procesamiento" en la web.
+
+---
+
+TIPS GENERALES:
+- Formatos aceptados: Solo imágenes (.jpg, .jpeg, .png).
+- Nombres de Archivo: La app renombra automáticamente los archivos procesados usando el formato Suplidor_Fecha.jpg.
+- Deduplicación: Si intentas procesar una factura con un NCF que ya existe en el Excel, el sistema actualizará el registro en lugar de duplicarlo.

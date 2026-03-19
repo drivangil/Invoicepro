@@ -30,6 +30,13 @@ def download():
         return send_file(EXCEL_FILE, as_attachment=True)
     return "Archivo no encontrado", 404
 
+@app.route('/download-manual')
+def download_manual():
+    manual_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'MANUAL_USUARIO.txt')
+    if os.path.exists(manual_path):
+        return send_file(manual_path, as_attachment=True)
+    return "Manual no encontrado", 404
+
 # Configuración de rutas
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 NO_PROCESADOS_DIR = os.path.join(BASE_DIR, 'NO PROCESADOS')
