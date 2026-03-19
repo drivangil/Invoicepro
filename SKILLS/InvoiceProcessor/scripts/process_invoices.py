@@ -58,28 +58,28 @@ def get_extracted_data_mock(filename):
             "Total": 360.00
         }
     
-    # DEPÓSITO DENTAL FERNÁNDEZ N. SRL - Factura 2 (10/06/2025)
-    elif "2.20.21 pm" in file_lower or "dedefensr_20250610" in file_lower or "b.jpeg" in file_lower:
+    # Laboratorio Classic Dental (a.jpeg)
+    elif "a.jpeg" in file_lower or "laclde_20260218" in file_lower:
         return {
-            "Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
-            "Fecha": "10/06/2025",
-            "Factura": "B0 200031626",
-            "NCF": "B0 200031626",
-            "Fecha Vencimiento": "10/07/2025",
-            "ITBIS": 0,
-            "Total": 375.00
+            "Suplidor": "Laboratorio Classic Dental",
+            "Fecha": "18/02/2026",
+            "Factura": "44843",
+            "NCF": "44843",
+            "Fecha Vencimiento": "18/02/2026",
+            "ITBIS": 0.00,
+            "Total": 5000.00
         }
-    
-    # DEPÓSITO DENTAL FERNÁNDEZ N. SRL - Factura 3 (09/06/2025)
-    elif "2.20.32 pm" in file_lower or "dedefensr_20250609" in file_lower or "a.jpeg" in file_lower:
+
+    # CAPELLAN DENTAL (b.jpeg)
+    elif "b.jpeg" in file_lower or "cade_20230312" in file_lower:
         return {
-            "Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
-            "Fecha": "09/06/2025",
-            "Factura": "B0 200031616",
-            "NCF": "B0 200031616",
-            "Fecha Vencimiento": "09/07/2025",
-            "ITBIS": 453.05,
-            "Total": 2970.00
+            "Suplidor": "CAPELLAN DENTAL",
+            "Fecha": "12/03/2023",
+            "Factura": "28054",
+            "NCF": "B0200063868",
+            "Fecha Vencimiento": "11/04/2023",
+            "ITBIS": 0.00,
+            "Total": 15455.00
         }
     return None
     return None
