@@ -290,8 +290,11 @@
                 <p class="subtitle" style="text-align: left; margin-bottom: 0;">Automatizando el procesamiento de tus facturas</p>
             </div>
             <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="/download" class="btn-download" id="download-btn" style="display: none; cursor: pointer; border: 1px solid var(--accent-green); color: var(--text-main); background: rgba(16, 185, 129, 0.1);">
+                    <span>📥 Descargar Excel</span>
+                </a>
                 <button class="btn-download" id="open-excel-btn" style="display: none; cursor: pointer; border: 1px solid var(--primary); color: var(--text-main); background: rgba(99, 102, 241, 0.1);">
-                    <span>📊 Abrir en Excel</span>
+                    <span>📊 Abrir Local</span>
                 </button>
             </div>
         </div>
@@ -357,7 +360,7 @@
         const statusMsg = document.getElementById('status-msg');
         const resultsContainer = document.getElementById('results-container');
         const resultsBody = document.getElementById('results-body');
-        const downloadLink = document.getElementById('download-link');
+        const downloadBtn = document.getElementById('download-btn');
         const openExcelBtn = document.getElementById('open-excel-btn');
         const fileInput = document.getElementById('file-input');
         const uploadBtn = document.getElementById('upload-btn');
@@ -386,6 +389,7 @@
                 // Mostrar botón de abrir si hay registros procesados (si existe el archivo)
                 if (data.procesados > 0) {
                     openExcelBtn.style.display = "inline-flex";
+                    downloadBtn.style.display = "inline-flex";
                 }
             } catch (err) {
                 console.error("Error fetching status", err);
@@ -512,6 +516,7 @@
 
             resultsContainer.style.display = "block";
             openExcelBtn.style.display = "inline-flex";
+            downloadBtn.style.display = "inline-flex";
         }
 
         // Carga inicial
