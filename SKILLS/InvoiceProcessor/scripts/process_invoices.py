@@ -43,7 +43,12 @@ def get_extracted_data_mock(filename):
         return {"Suplidor": "LEKA SUPPLY DENTAL SRL", "Fecha": "23/01/2026", "Factura": "1561", "NCF": "1561", "Fecha Vencimiento": "23/01/2026", "ITBIS": 0.00, "Total": 500.00}
     elif "k.jpeg" in file_lower or "rode_" in file_lower:
         return {"Suplidor": "ROCE DENTAL", "Fecha": "26/02/2026", "Factura": "00138640", "NCF": "E310000016820", "Fecha Vencimiento": "26/02/2026", "ITBIS": 12042.00, "Total": 78942.00}
-    return None
+    elif "dedefensr_" in file_lower or "9.21.07 am" in file_lower:
+        return {"Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL", "Fecha": "13/03/2026", "Factura": "B0 200036745", "NCF": "B0 200036745", "Fecha Vencimiento": "12/04/2026", "ITBIS": 0, "Total": 360.00}
+    elif "pudespjasr_" in file_lower or "pudespjasr" in file_lower:
+        return {"Suplidor": "PUNTO DENTAL SPOT JAL, SRL", "Fecha": "17/03/2026", "Factura": "0013724", "NCF": "B0200016975", "Fecha Vencimiento": "16/04/2026", "ITBIS": 570.60, "Total": 3170.00}
+    elif "laclde_" in file_lower:
+        return {"Suplidor": "Laboratorio Classic Dental", "Fecha": "18/02/2026", "Factura": "44843", "NCF": "44843", "Fecha Vencimiento": "18/02/2026", "ITBIS": 0.00, "Total": 5000.00}
     return None
 
 def generate_new_filename(supplier_name, date_str, original_filename):
