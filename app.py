@@ -2,7 +2,9 @@ import os
 import sys
 import subprocess
 import platform
-from flask import Flask, render_template, jsonify, send_file, request, session
+import zipfile
+import io
+from flask import Flask, render_template, jsonify, send_file, request, session, send_from_directory
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -26,6 +28,38 @@ def download():
     if os.path.exists(EXCEL_FILE):
         return send_file(EXCEL_FILE, as_attachment=True)
     return "Archivo no encontrado", 404
+
+@app.route('/download-file/<filename>')
+def download_file(filename):
+    """Descarga una factura individual procesada."""
+    filepath = os.path.join(PROCESADOS_DIR, filename)
+    if os.path.exists(filepath):
+        return send_file(filepath, as_attachment=True)
+    return "Archivo no encontrado", 404
+
+@app.route('/download-all')
+def download_all():
+    """Crea un ZIP con el Excel y todas las facturas procesadas."""
+    memory_file = io.BytesIO()
+    with zipfile.ZipFile(memory_file, 'w', zipfile.ZIP_DEFLATED) as zf:
+        # Agregar Excel
+        if os.path.exists(EXCEL_FILE):
+            zf.write(EXCEL_FILE, os.path.basename(EXCEL_FILE))
+        
+        # Agregar todas las facturas de PROCESADOS
+        if os.path.exists(PROCESADOS_DIR):
+            for file in os.listdir(PROCESADOS_DIR):
+                exts = ('.png', '.jpg', '.jpeg', '.bmp', '.tiff', '.webp')
+                if file.lower().endswith(exts):
+                    zf.write(os.path.join(PROCESADOS_DIR, file), file)
+    
+    memory_file.seek(0)
+    return send_file(
+        memory_file,
+        mimetype='application/zip',
+        as_attachment=True,
+        download_name='facturas_y_archivos.zip'
+    )
 
 @app.route('/download-manual')
 def download_manual():

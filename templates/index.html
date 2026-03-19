@@ -296,6 +296,9 @@
                 <a href="/download" class="btn-download" id="download-btn" style="display: none; cursor: pointer; border: 1px solid var(--accent-green); color: var(--text-main); background: rgba(16, 185, 129, 0.1);">
                     <span>📥 Descargar Excel</span>
                 </a>
+                <a href="/download-all" class="btn-download" id="download-zip-btn" style="display: none; cursor: pointer; border: 1px solid var(--primary); color: var(--text-main); background: rgba(99, 102, 241, 0.1);">
+                    <span>📦 Descargar Todo (.zip)</span>
+                </a>
                 <button class="btn-download" id="open-excel-btn" style="display: none; cursor: pointer; border: 1px solid var(--primary); color: var(--text-main); background: rgba(99, 102, 241, 0.1);">
                     <span>📊 Abrir Local</span>
                 </button>
@@ -343,7 +346,7 @@
                             <th>Vencimiento</th>
                             <th style="text-align: right;">ITBIS</th>
                             <th style="text-align: right;">Total</th>
-                            <th>Archivo</th>
+                            <th style="text-align: center;">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="results-body">
@@ -364,6 +367,7 @@
         const resultsContainer = document.getElementById('results-container');
         const resultsBody = document.getElementById('results-body');
         const downloadBtn = document.getElementById('download-btn');
+        const downloadZipBtn = document.getElementById('download-zip-btn');
         const openExcelBtn = document.getElementById('open-excel-btn');
         const fileInput = document.getElementById('file-input');
         const uploadBtn = document.getElementById('upload-btn');
@@ -489,7 +493,11 @@
                     <td>${entry['Fecha Vencimiento'] || '-'}</td>
                     <td class="price-tag" style="text-align: right;">${entry.ITBIS ? '$' + entry.ITBIS.toLocaleString() : '-'}</td>
                     <td class="price-tag" style="text-align: right;">$${entry.Total.toLocaleString()}</td>
-                    <td style="font-size: 0.75rem; color: var(--text-muted);">${entry.Archivo || '-'}</td>
+                    <td style="text-align: center;">
+                        <a href="/download-file/${entry.Archivo}" class="btn-download" title="Descargar Imagen" style="padding: 4px 8px; font-size: 0.7rem;">
+                            📥 JPG
+                        </a>
+                    </td>
                 `;
                 resultsBody.appendChild(row);
             });
@@ -509,7 +517,8 @@
 
             resultsContainer.style.display = "block";
             openExcelBtn.style.display = "inline-flex";
-            downloadBtn.style.display = "inline-flex";
+            if (downloadBtn) downloadBtn.style.display = "inline-flex";
+            downloadZipBtn.style.display = "inline-flex";
         }
 
         // Carga inicial
