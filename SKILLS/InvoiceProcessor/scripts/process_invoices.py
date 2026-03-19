@@ -17,70 +17,32 @@ os.makedirs(PROCESADOS_DIR, exist_ok=True)
 
 def get_extracted_data_mock(filename):
     """
-    Mock de extracción de datos. En una implementación real, aquí se usaría OCR o una API de IA.
-    Para este ejercicio, usamos los datos ya identificados en las imágenes de muestra.
+    Mock de extracción de datos optimizado para las 11 nuevas facturas.
     """
     file_lower = filename.lower()
     
-    # PUNTO DENTAL SPOT JAL, SRL
-    if "pudespjasr" in file_lower or "c.jpeg" in file_lower or "d.jpeg" in file_lower:
-        # Factura del 17/03/2026 (c.jpeg o ya renombrado)
-        if "c.jpeg" in file_lower or "20260317" in file_lower:
-            return {
-                "Suplidor": "PUNTO DENTAL SPOT JAL, SRL",
-                "Fecha": "17/03/2026",
-                "Factura": "0013724",
-                "NCF": "B0200016975",
-                "Fecha Vencimiento": "16/04/2026",
-                "ITBIS": 570.60,
-                "Total": 3170.00
-            }
-        # Facturas del 09/03/2026 (d.jpeg o ya renombrado)
-        return {
-            "Suplidor": "PUNTO DENTAL SPOT JAL, SRL",
-            "Fecha": "09-03-2026",
-            "Factura": "0013665",
-            "NCF": "B020016858",
-            "Fecha Vencimiento": "08-04-2026",
-            "ITBIS": 553.50,
-            "Total": 3075.00
-        }
-    
-    # DEPÓSITO DENTAL FERNÁNDEZ N. SRL - Factura 1 (13/03/2026)
-    elif "9.21.07 am" in file_lower or "e.jpeg" in file_lower or "dedefensr_20260313" in file_lower:
-        return {
-            "Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
-            "Fecha": "13/03/2026",
-            "Factura": "B0 200036745",
-            "NCF": "B0 200036745",
-            "Fecha Vencimiento": "12/04/2026",
-            "ITBIS": 0,
-            "Total": 360.00
-        }
-    
-    # Laboratorio Classic Dental (a.jpeg)
-    elif "a.jpeg" in file_lower or "laclde_20260218" in file_lower:
-        return {
-            "Suplidor": "Laboratorio Classic Dental",
-            "Fecha": "18/02/2026",
-            "Factura": "44843",
-            "NCF": "44843",
-            "Fecha Vencimiento": "18/02/2026",
-            "ITBIS": 0.00,
-            "Total": 5000.00
-        }
-
-    # CAPELLAN DENTAL (b.jpeg)
-    elif "b.jpeg" in file_lower or "cade_20230312" in file_lower:
-        return {
-            "Suplidor": "CAPELLAN DENTAL",
-            "Fecha": "12/03/2023",
-            "Factura": "28054",
-            "NCF": "B0200063868",
-            "Fecha Vencimiento": "11/04/2023",
-            "ITBIS": 0.00,
-            "Total": 15455.00
-        }
+    if "a.jpeg" in file_lower:
+        return {"Suplidor": "CAPELLAN DENTAL", "Fecha": "19/03/2026", "Factura": "51604", "NCF": "E310000003142", "Fecha Vencimiento": "19/03/2026", "ITBIS": 0.00, "Total": 6190.80}
+    elif "b.jpeg" in file_lower:
+        return {"Suplidor": "DE LOS SANTOS DENTAL, SRL", "Fecha": "18/03/2026", "Factura": "46484", "NCF": "E310000010271", "Fecha Vencimiento": "17/04/2026", "ITBIS": 134.24, "Total": 880.00}
+    elif "c.jpeg" in file_lower:
+        return {"Suplidor": "MIS INC", "Fecha": "18/03/2026", "Factura": "23898", "NCF": "23898", "Fecha Vencimiento": "18/03/2026", "ITBIS": 0.00, "Total": 240.00}
+    elif "d.jpeg" in file_lower:
+        return {"Suplidor": "FARACH, S.A.", "Fecha": "06/03/2026", "Factura": "9400239473", "NCF": "E3100000093855", "Fecha Vencimiento": "06/03/2026", "ITBIS": 342.00, "Total": 2375.00}
+    elif "e.jpeg" in file_lower:
+        return {"Suplidor": "S&M Dental", "Fecha": "06/03/2026", "Factura": "FACT/100024590", "NCF": "B01000015101", "Fecha Vencimiento": "05/04/2026", "ITBIS": 247.78, "Total": 1624.34}
+    elif "f.jpeg" in file_lower:
+        return {"Suplidor": "MEDICONA, S.R.L.", "Fecha": "16/03/2026", "Factura": "01912", "NCF": "B01000015084", "Fecha Vencimiento": "15/04/2026", "ITBIS": 35.08, "Total": 230.00}
+    elif "g.jpeg" in file_lower:
+        return {"Suplidor": "FRADENT, SRL", "Fecha": "09/03/2026", "Factura": "FC01-180844", "NCF": "E3100000018329", "Fecha Vencimiento": "08/04/2026", "ITBIS": 57.35, "Total": 376.00}
+    elif "h.jpeg" in file_lower:
+        return {"Suplidor": "Oscar A. Renta Negron, S.A.", "Fecha": "05/03/2026", "Factura": "VFR-157856", "NCF": "E3100000048082", "Fecha Vencimiento": "04/04/2026", "ITBIS": 194.65, "Total": 1201.53}
+    elif "i.jpeg" in file_lower:
+        return {"Suplidor": "SISTEMAS DE IMPLANTES NACIONAL DOMINICANA", "Fecha": "16/03/2026", "Factura": "A202602606", "NCF": "A202602606", "Fecha Vencimiento": "26/03/2026", "ITBIS": 0.00, "Total": 48.00}
+    elif "j.jpeg" in file_lower:
+        return {"Suplidor": "LEKA SUPPLY DENTAL SRL", "Fecha": "23/01/2026", "Factura": "1561", "NCF": "1561", "Fecha Vencimiento": "23/01/2026", "ITBIS": 0.00, "Total": 500.00}
+    elif "k.jpeg" in file_lower:
+        return {"Suplidor": "ROCE DENTAL", "Fecha": "26/02/2026", "Factura": "00138640", "NCF": "E310000016820", "Fecha Vencimiento": "26/02/2026", "ITBIS": 12042.00, "Total": 78942.00}
     return None
     return None
 
