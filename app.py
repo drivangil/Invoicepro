@@ -8,6 +8,9 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 EXCEL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'facturas.xlsx')
 
+# Contador de sesión para facturas procesadas
+session_processed_count = 0
+
 @app.route('/open-excel')
 def open_excel():
     if os.path.exists(EXCEL_FILE):
@@ -52,15 +55,19 @@ def status():
     print(f"DEBUG: Revisando PENDIENTES en {NO_PROCESADOS_DIR}")
     return jsonify({
         'no_procesados': count_files(NO_PROCESADOS_DIR),
-        'procesados': count_files(PROCESADOS_DIR),
+        'procesados': session_processed_count,
         'records': process_invoices.get_grouped_records()
     })
 
 @app.route('/process', methods=['POST'])
 def process():
+    global session_processed_count
     try:
         # Ejecutar la skill (procesa nuevos y actualiza Excel)
         newly_processed = process_invoices.main()
+        
+        # Actualizar el contador de sesión
+        session_processed_count += len(newly_processed)
         
         # Obtener los registros actualizados (lista simple ordenada por vencimiento)
         all_records = process_invoices.get_grouped_records()
