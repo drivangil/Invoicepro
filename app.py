@@ -113,18 +113,16 @@ def process():
         # Llevar a 0 el pendiente (Quitar de memoria las no procesadas)
         session['pending'] = 0
         
-        # Obtener los registros actualizados (lista simple ordenada por vencimiento)
-        all_records = process_invoices.get_grouped_records()
-        
         # Construir mensaje de respuesta con aviso de fallos si existen
         message = f'Se procesaron {len(newly_processed)} facturas con éxito.'
         if failed_files:
             message += f" [AVISO: {len(failed_files)} no se procesaron: {', '.join(failed_files)}]"
-        
+
+        # Solo retornamos las facturas que acaban de ser procesadas en este lote
         return jsonify({
             'success': True,
             'message': message,
-            'data': all_records 
+            'data': newly_processed 
         })
     except Exception as e:
         return jsonify({

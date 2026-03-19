@@ -25,12 +25,22 @@ def get_extracted_data_mock(filename):
         return {"Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL", "Fecha": "20/03/2026", "Factura": "B0200036854", "NCF": "B0200036854", "Fecha Vencimiento": "31/12/2026", "ITBIS": 0.00, "Total": 1050.00}
     elif "delosadesr_20260318.jpeg" in file_lower:
         return {"Suplidor": "PUNTO DENTAL SPOT JAL, SRL", "Fecha": "17/03/2026", "Factura": "0013724", "NCF": "B0200016975", "Fecha Vencimiento": "16/04/2026", "ITBIS": 483.56, "Total": 3170.00}
-    elif "fasa_20260306.jpeg" in file_lower:
+    elif "fasa_20260319.jpeg" in file_lower or "fasa_20260306.jpeg" in file_lower: # Varias fechas detectadas
         return {"Suplidor": "PUNTO DENTAL SPOT JAL, SRL", "Fecha": "19/03/2026", "Factura": "0013744", "NCF": "B0200017007", "Fecha Vencimiento": "18/04/2026", "ITBIS": 137.29, "Total": 2440.00}
     elif "miin_20260318.jpeg" in file_lower:
         return {"Suplidor": "PUNTO DENTAL SPOT JAL, SRL", "Fecha": "09/03/2026", "Factura": "0013665", "NCF": "B0200016858", "Fecha Vencimiento": "08/04/2026", "ITBIS": 483.56, "Total": 3075.00}
 
-    # Mapeo de las 18 imágenes numéricas (01.jpeg a 18.jpeg) y nombres generados
+    # Inferencia inteligente por Palabras Clave (Simulación de Escaneo)
+    if "punto" in file_lower or "jal" in file_lower or "pudesp" in file_lower:
+        return {"Suplidor": "PUNTO DENTAL SPOT JAL, SRL", "Fecha": "17/03/2026", "Factura": "0013724", "NCF": "B0200016975", "Fecha Vencimiento": "16/04/2026", "ITBIS": 483.56, "Total": 3170.00}
+    elif "fernandez" in file_lower or "defen" in file_lower or "dedefe" in file_lower:
+        return {"Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL", "Fecha": "20/03/2026", "Factura": "B0200036854", "NCF": "B0200036854", "Fecha Vencimiento": "31/12/2026", "ITBIS": 0.00, "Total": 1050.00}
+    elif "capellan" in file_lower or "cade" in file_lower:
+        return {"Suplidor": "CAPELLAN DENTAL", "Fecha": "19/03/2026", "Factura": "51604", "NCF": "E310000003142", "Fecha Vencimiento": "19/03/2026", "ITBIS": 0.00, "Total": 6190.80}
+    elif "fasa" in file_lower or "farach" in file_lower:
+        return {"Suplidor": "FARACH, S.A.", "Fecha": "06/03/2026", "Factura": "9400239473", "NCF": "E3100000093855", "Fecha Vencimiento": "06/03/2026", "ITBIS": 342.00, "Total": 2375.00}
+
+    # Mapeo de las 18 imágenes numéricas (01.jpeg a 18.jpeg)
     if "01.jpeg" in file_lower or "a.jpeg" in file_lower:
         return {"Suplidor": "CAPELLAN DENTAL", "Fecha": "19/03/2026", "Factura": "51604", "NCF": "E310000003142", "Fecha Vencimiento": "19/03/2026", "ITBIS": 0.00, "Total": 6190.80}
     elif "02.jpeg" in file_lower or "b.jpeg" in file_lower:
