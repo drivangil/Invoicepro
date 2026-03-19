@@ -260,6 +260,8 @@ def main():
         return []
 
     processed_data = []
+    failed_data = []
+
     for filename in files:
         filepath = os.path.join(NO_PROCESADOS_DIR, filename)
         print(f"Procesando: {filename}...")
@@ -288,16 +290,17 @@ def main():
             print(f"Completado: {filename} -> {new_name}")
         else:
             print(f"No se pudieron extraer datos de {filename}. Se omite.")
+            failed_data.append(filename)
 
     if processed_data:
         update_excel_report(processed_data, merge_existing=True)
-    elif os.path.exists(NO_PROCESADOS_DIR):
-        # Regenerar si es necesario (limpiar si no hay nada en NO PROCESADOS)
+    elif os.path.exists(NO_PROCESADOS_DIR) and not files:
+        # Regenerar si es necesario (limpiar si no hay nada en NO PROCESADOS y no hubo archivos para procesar)
         update_excel_report([], merge_existing=True)
 
     print(f"\nProcesamiento terminado. Se procesaron {len(processed_data)} facturas.")
     print(f"Resultados guardados en: {EXCEL_FILE}")
-    return processed_data
+    return processed_data, failed_data
 
 if __name__ == "__main__":
     main()

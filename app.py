@@ -70,7 +70,7 @@ def status():
 def process():
     try:
         # Ejecutar la skill (procesa nuevos y actualiza Excel)
-        newly_processed = process_invoices.main()
+        newly_processed, failed_files = process_invoices.main()
         
         # Actualizar contadores de sesión
         count = len(newly_processed)
@@ -82,9 +82,14 @@ def process():
         # Obtener los registros actualizados (lista simple ordenada por vencimiento)
         all_records = process_invoices.get_grouped_records()
         
+        # Construir mensaje de respuesta con aviso de fallos si existen
+        message = f'Se procesaron {len(newly_processed)} facturas con éxito.'
+        if failed_files:
+            message += f" [AVISO: {len(failed_files)} no se procesaron: {', '.join(failed_files)}]"
+        
         return jsonify({
             'success': True,
-            'message': f'Se procesaron {len(newly_processed)} facturas con éxito.',
+            'message': message,
             'data': all_records 
         })
     except Exception as e:
