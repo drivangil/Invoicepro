@@ -50,8 +50,8 @@ La inteligencia de la skill reconoce formatos de:
 
 ## Inteligencia y Robustez
 
+- **VERIFICACIÓN EXTREMA (Regla de Oro)**: La skill NUNCA debe confiar ciegamente en el nombre o prefijo del archivo (ej. un archivo llamado `CADE_...` podría ser realmente de `FERNÁNDEZ`). El sistema debe siempre "escanear" (validar visualmente) el encabezado de la imagen para determinar el suplidor real antes de procesarlo.
 - **Patrón Numérico 01-18**: La skill reconoce automáticamente la serie de archivos `01.jpeg` hasta `18.jpeg` y los asocia a sus suplidores correspondientes.
-- **Prueba de Re-procesamiento**: El sistema es robusto; si un archivo ya renombrado (ej. `CADE_20260319.jpeg`) vuelve a entrar en `/NO PROCESADOS`, se identifica correctamente por su prefijo y se vuelve a procesar sin errores.
 - **Acumulación de Datos**: Permite agregar nuevas facturas al reporte existente, deduplicando por NCF.
 - **Orden de Vencimiento**: Las facturas se listan por fecha de vencimiento ascendente en Excel.
 
