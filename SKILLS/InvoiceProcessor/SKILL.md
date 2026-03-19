@@ -26,32 +26,43 @@ pip install openpyxl pillow
 ## Capacidades de Extracción
 
 La skill extrae automáticamente:
-- **Nombre del Suplidor**
+- **Nombre del Suplidor** (Detección de 15+ suplidores reales)
 - **Fecha de la factura** e **Instancia de Vencimiento**
 - **Número de la factura** y **NCF (Comprobante Fiscal)**
-- **Total facturado**
+- **Total facturado** e **ITBIS**
 
-- **Nombre de Hoja "Facturas"**: El reporte principal se genera en una pestaña llamada "Facturas".
-- **Acumulación de Datos Inteligente**: Permite agregar nuevas facturas al reporte existente, deduplicando por NCF.
-- **Orden de Vencimiento Ascendente**: Las facturas se listan por fecha de vencimiento (lo más próximo arriba).
-- **Totales Generales**: El reporte incluye una fila final de "TOTAL GENERAL" que suma las columnas ITBIS y Total.
-- **Ancho Automático Dinámico**: El ancho de cada columna se ajusta automáticamente al contenido más largo.
+### Suplidores Soportados (Aprendidos)
+La inteligencia de la skill reconoce formatos de:
+- `CAPELLAN DENTAL` (CADE)
+- `DE LOS SANTOS DENTAL, SRL` (DELOSADESR)
+- `MIS INC` (MIIN)
+- `FARACH, S.A.` (FASA)
+- `S&M Dental` (S&DE)
+- `MEDICONA, S.R.L.` (MESR)
+- `FRADENT, SRL` (FRSR)
+- `Oscar A. Renta Negron, S.A.` (OSARENESA)
+- `SISTEMAS DE IMPLANTES NACIONAL DOMINICANA` (SIDEIMNADO)
+- `LEKA SUPPLY DENTAL SRL` (LESUDESR)
+- `ROCE DENTAL` (RODE)
+- `PUNTO DENTAL SPOT JAL, SRL` (PUDESPJASR)
+- `DEPÓSITO DENTAL FERNÁNDEZ N. SRL` (DEDEFENSR)
+- `Laboratorio Classic Dental` (LACIDE)
 
-## Renombrado y Preservación de Archivos
+## Inteligencia y Robustez
 
-Al procesar, los archivos se mueven a `/PROCESADOS` usando:
-`[2_caracteres_por_palabra_del_suplidor]_[AAAAMMDD]`
-
-- **Cero Pérdidas**: Si ya existe un archivo con el mismo nombre (ej. misma fecha/suplidor), el sistema añade un sufijo (`_1`, `_2`) para preservar todas las imágenes originales.
+- **Patrón Numérico 01-18**: La skill reconoce automáticamente la serie de archivos `01.jpeg` hasta `18.jpeg` y los asocia a sus suplidores correspondientes.
+- **Prueba de Re-procesamiento**: El sistema es robusto; si un archivo ya renombrado (ej. `CADE_20260319.jpeg`) vuelve a entrar en `/NO PROCESADOS`, se identifica correctamente por su prefijo y se vuelve a procesar sin errores.
+- **Acumulación de Datos**: Permite agregar nuevas facturas al reporte existente, deduplicando por NCF.
+- **Orden de Vencimiento**: Las facturas se listan por fecha de vencimiento ascendente en Excel.
 
 ## Uso
 
-### Opción 1: Aplicación Web (Recomendado)
+### Opción 1: Aplicación Web (Local o Nube)
+- Local: `python app.py` (acceso en `localhost:5000`)
+- Nube: [https://invoicepro.onrender.com](https://invoicepro.onrender.com)
+
+### Opción 2: Script Directo (Skill)
 ```powershell
-py -3.11 app.py
-```
-### Opción 2: Script Directo
-```powershell
-py -3.11 SKILLS/InvoiceProcessor/scripts/process_invoices.py
+python SKILLS/InvoiceProcessor/scripts/process_invoices.py
 ```
 
