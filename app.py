@@ -8,7 +8,8 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 EXCEL_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'facturas.xlsx')
 
-# Contador de sesión para facturas procesadas
+# Contadores de sesión para el tablero
+session_pending_count = 0
 session_processed_count = 0
 
 @app.route('/open-excel')
@@ -54,20 +55,22 @@ def status():
     # Debug para confirmar ruta
     print(f"DEBUG: Revisando PENDIENTES en {NO_PROCESADOS_DIR}")
     return jsonify({
-        'no_procesados': count_files(NO_PROCESADOS_DIR),
+        'no_procesados': session_pending_count,
         'procesados': session_processed_count,
         'records': process_invoices.get_grouped_records()
     })
 
 @app.route('/process', methods=['POST'])
 def process():
-    global session_processed_count
+    global session_processed_count, session_pending_count
     try:
         # Ejecutar la skill (procesa nuevos y actualiza Excel)
         newly_processed = process_invoices.main()
         
-        # Actualizar el contador de sesión
-        session_processed_count += len(newly_processed)
+        # Actualizar contadores de sesión
+        count = len(newly_processed)
+        session_processed_count += count
+        session_pending_count = max(0, session_pending_count - count)
         
         # Obtener los registros actualizados (lista simple ordenada por vencimiento)
         all_records = process_invoices.get_grouped_records()
@@ -86,6 +89,7 @@ def process():
 
 @app.route('/upload', methods=['POST'])
 def upload_files():
+    global session_pending_count
     if 'files' not in request.files:
         return jsonify({"success": False, "message": "No se enviaron archivos"}), 400
     
@@ -101,6 +105,8 @@ def upload_files():
             filename = secure_filename(file.filename)
             file.save(os.path.join(NO_PROCESADOS_DIR, filename))
             count += 1
+            
+    session_pending_count += count
             
     return jsonify({
         "success": True, 
