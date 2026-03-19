@@ -1,0 +1,303 @@
+import os
+import shutil
+from datetime import datetime
+from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Font
+from PIL import Image
+
+# Configuración de rutas
+# Buscamos el directorio raíz subiendo desde el script (scripts/InvoiceProcessor/SKILLS/..)
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+NO_PROCESADOS_DIR = os.path.join(BASE_DIR, 'NO PROCESADOS')
+PROCESADOS_DIR = os.path.join(BASE_DIR, 'PROCESADOS')
+EXCEL_FILE = os.path.join(BASE_DIR, 'facturas.xlsx')
+
+# Asegurar que las carpetas existan
+os.makedirs(PROCESADOS_DIR, exist_ok=True)
+
+def get_extracted_data_mock(filename):
+    """
+    Mock de extracción de datos. En una implementación real, aquí se usaría OCR o una API de IA.
+    Para este ejercicio, usamos los datos ya identificados en las imágenes de muestra.
+    """
+    file_lower = filename.lower()
+    
+    # PUNTO DENTAL SPOT JAL, SRL
+    if "pudespjasr" in file_lower or "c.jpeg" in file_lower or "d.jpeg" in file_lower:
+        # Factura del 17/03/2026 (c.jpeg o ya renombrado)
+        if "c.jpeg" in file_lower or "20260317" in file_lower:
+            return {
+                "Suplidor": "PUNTO DENTAL SPOT JAL, SRL",
+                "Fecha": "17/03/2026",
+                "Factura": "0013724",
+                "NCF": "B0200016975",
+                "Fecha Vencimiento": "16/04/2026",
+                "ITBIS": 570.60,
+                "Total": 3170.00
+            }
+        # Facturas del 09/03/2026 (d.jpeg o ya renombrado)
+        return {
+            "Suplidor": "PUNTO DENTAL SPOT JAL, SRL",
+            "Fecha": "09-03-2026",
+            "Factura": "0013665",
+            "NCF": "B020016858",
+            "Fecha Vencimiento": "08-04-2026",
+            "ITBIS": 553.50,
+            "Total": 3075.00
+        }
+    
+    # DEPÓSITO DENTAL FERNÁNDEZ N. SRL - Factura 1 (13/03/2026)
+    elif "9.21.07 am" in file_lower or "e.jpeg" in file_lower or "dedefensr_20260313" in file_lower:
+        return {
+            "Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
+            "Fecha": "13/03/2026",
+            "Factura": "B0 200036745",
+            "NCF": "B0 200036745",
+            "Fecha Vencimiento": "12/04/2026",
+            "ITBIS": 0,
+            "Total": 360.00
+        }
+    
+    # DEPÓSITO DENTAL FERNÁNDEZ N. SRL - Factura 2 (10/06/2025)
+    elif "2.20.21 pm" in file_lower or "dedefensr_20250610" in file_lower or "b.jpeg" in file_lower:
+        return {
+            "Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
+            "Fecha": "10/06/2025",
+            "Factura": "B0 200031626",
+            "NCF": "B0 200031626",
+            "Fecha Vencimiento": "10/07/2025",
+            "ITBIS": 0,
+            "Total": 375.00
+        }
+    
+    # DEPÓSITO DENTAL FERNÁNDEZ N. SRL - Factura 3 (09/06/2025)
+    elif "2.20.32 pm" in file_lower or "dedefensr_20250609" in file_lower or "a.jpeg" in file_lower:
+        return {
+            "Suplidor": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
+            "Fecha": "09/06/2025",
+            "Factura": "B0 200031616",
+            "NCF": "B0 200031616",
+            "Fecha Vencimiento": "09/07/2025",
+            "ITBIS": 453.05,
+            "Total": 2970.00
+        }
+    return None
+    return None
+
+def generate_new_filename(supplier_name, date_str, original_filename):
+    """
+    Genera un nuevo nombre basado en la regla:
+    2 primeros caracteres de cada palabra del suplidor + "_" + fecha en formato yyyymmdd
+    """
+    # 1. Obtener iniciales (2 caracteres por palabra)
+    words = supplier_name.replace(",", "").replace(".", "").split()
+    prefix = "".join([word[:2] for word in words])
+    
+    # 2. Formatear fecha a yyyymmdd
+    dt = parse_date(date_str)
+    date_part = dt.strftime('%Y%m%d') if dt != datetime.min else "00000000"
+    
+    # 3. Mantener extensión original
+    ext = os.path.splitext(original_filename)[1]
+    
+    return f"{prefix}_{date_part}{ext}"
+
+
+def load_all_records():
+    """Carga todos los registros actuales del Excel para poder re-ordenarlos."""
+    records = []
+    if os.path.exists(EXCEL_FILE):
+        try:
+            wb = load_workbook(EXCEL_FILE)
+            ws = wb.active
+            # Asumimos que la primera fila es el encabezado
+            # Salta las filas de subtotal (las que tienen "Subtotal" en la primera columna)
+            for row in ws.iter_rows(min_row=2, values_only=True):
+                # Solo cargar filas que parecen ser de factura (no resumen, pagos o totales previos)
+                if row[0] and all(k not in str(row[0]).upper() for k in ("RESUMEN", "SUPLIDOR", "PAGOS", "TOTAL")):
+                    # Asegurarse de que la fila tenga suficientes columnas para ser una factura
+                    if len(row) >= 7 and row[0] is not None and row[0] != "":
+                        records.append({
+                            "Suplidor": row[0],
+                            "Fecha": row[1],
+                            "Factura": row[2],
+                            "NCF": row[3],
+                            "Fecha Vencimiento": row[4],
+                            "ITBIS": row[5] if len(row) > 7 else 0, # Nueva columna ITBIS
+                            "Total": row[6] if len(row) > 7 else row[5],
+                            "Archivo": row[7] if len(row) > 7 else (row[6] if len(row) > 6 else "")
+                        })
+        except Exception as e:
+            print(f"Error al cargar Excel: {e}")
+    return records
+
+def parse_date(date_str):
+    """Parsea fechas en formatos variados (DD-MM-YYYY o DD/MM/YYYY)."""
+    if not date_str: return datetime.min
+    for fmt in ('%d-%m-%Y', '%d/%m/%Y'):
+        try:
+            return datetime.strptime(date_str, fmt)
+        except ValueError:
+            continue
+    return datetime.min
+
+
+
+def update_excel_report(new_data_list, merge_existing=False):
+    """Reconstruye el reporte Excel como una lista simple ordenada por vencimiento ASC."""
+    # 1. Cargar datos existentes
+    existing_invoices = []
+    if merge_existing:
+        existing_invoices = load_all_records()
+    
+    # Unir con los nuevos (Deduplicación por NCF)
+    records_dict = {str(r['NCF']).strip(): r for r in existing_invoices}
+    for new_rec in new_data_list:
+        ncf_key = str(new_rec['NCF']).strip()
+        records_dict[ncf_key] = new_rec
+            
+    all_unique_invoices = list(records_dict.values())
+    
+    if not all_unique_invoices:
+        print("No hay datos para generar el reporte.")
+        return
+
+    # 2. Ordenar por Fecha de Vencimiento ASC
+    all_unique_invoices.sort(key=lambda x: parse_date(x.get('Fecha Vencimiento', '')))
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Facturas"
+    
+    headers = ["Nombre del Suplidor", "Fecha de factura", "Número de factura", "NCF", "Vencimiento", "ITBIS", "Total", "Archivo"]
+    ws.append(headers)
+    
+    # Estilo cabecera
+    header_font = Font(bold=True)
+    for cell in ws[1]:
+        cell.font = header_font
+        
+    total_itbis = sum(inv.get("ITBIS", 0) or 0 for inv in all_unique_invoices)
+    total_monto = sum(inv.get("Total", 0) or 0 for inv in all_unique_invoices)
+    
+    for inv in all_unique_invoices:
+        ws.append([
+            inv["Suplidor"],
+            inv["Fecha"],
+            inv["Factura"],
+            inv["NCF"],
+            inv.get("Fecha Vencimiento", ""),
+            inv.get("ITBIS", ""),
+            inv["Total"],
+            inv.get("Archivo", "")
+        ])
+
+    # 3. Agregar fila de TOTAL
+    ws.append([]) # Fila vacía de separación
+    total_row_idx = ws.max_row + 1
+    ws.append([
+        "TOTAL GENERAL", "", "", "", "",
+        total_itbis,
+        total_monto,
+        ""
+    ])
+    
+    # Estilo fila de total
+    for cell in ws[total_row_idx]:
+        cell.font = Font(bold=True)
+
+    # 3. Ajustar anchos y formato dinámicamente según el contenido más largo
+    from openpyxl.styles import Alignment
+    
+    for col in range(1, 9):
+        col_letter = ws.cell(row=1, column=col).column_letter
+        max_length = 0
+        for row_idx, row in enumerate(ws.iter_rows(min_col=col, max_col=col), 1):
+            for cell in row:
+                # Aplicar alineación a columnas numéricas (F=6, G=7) - Incluyendo cabecera
+                if col in (6, 7):
+                    cell.alignment = Alignment(horizontal='right')
+                    # Formato numérico solo para la data (fila > 1)
+                    if row_idx > 1:
+                        cell.number_format = '#,##0.00'
+                
+                try:
+                    if cell.value:
+                        length = len(str(cell.value))
+                        if length > max_length:
+                            max_length = length
+                except:
+                    pass
+        
+        # Establecer un ancho mínimo de 10 y sumar un margen
+        adjusted_width = max(max_length + 2, 10)
+        ws.column_dimensions[col_letter].width = adjusted_width
+
+    try:
+        wb.save(EXCEL_FILE)
+        print(f"Reporte simplificado guardado en: {EXCEL_FILE}")
+    except PermissionError:
+        print(f"Error de permiso al guardar Excel. Procure cerrarlo.")
+        return []
+        
+def get_grouped_records():
+    """Función para la APP: Obtiene el estado actual del reporte simplificado."""
+    records = load_all_records()
+    # Ordenar por vencimiento ASC para la vista de la app
+    records.sort(key=lambda x: parse_date(x.get('Fecha Vencimiento', '')))
+    return records
+
+def main():
+    print("Iniciando procesamiento de facturas...")
+    
+    # Asegurar que las carpetas existan (por si se borraron)
+    os.makedirs(PROCESADOS_DIR, exist_ok=True)
+    
+    files = [f for f in os.listdir(NO_PROCESADOS_DIR) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+    
+    if not files:
+        print("No se encontraron imágenes en /NO PROCESADOS.")
+        return []
+
+    processed_data = []
+    for filename in files:
+        filepath = os.path.join(NO_PROCESADOS_DIR, filename)
+        print(f"Procesando: {filename}...")
+        
+        data = get_extracted_data_mock(filename)
+        
+        if data:
+            # Generar nuevo nombre de archivo
+            base_new_name = generate_new_filename(data["Suplidor"], data["Fecha"], filename)
+            
+            # Evitar colisiones si hay varias facturas del mismo suplidor/fecha
+            new_name = base_new_name
+            count = 1
+            while os.path.exists(os.path.join(PROCESADOS_DIR, new_name)):
+                name_parts = os.path.splitext(base_new_name)
+                new_name = f"{name_parts[0]}_{count}{name_parts[1]}"
+                count += 1
+                
+            new_path = os.path.join(PROCESADOS_DIR, new_name)
+            
+            # Mover a PROCESADOS con el nuevo nombre (sin sobreescribir)
+            shutil.move(filepath, new_path)
+            
+            data["Archivo"] = new_name  # Incluir el nombre final para la app
+            processed_data.append(data)
+            print(f"Completado: {filename} -> {new_name}")
+        else:
+            print(f"No se pudieron extraer datos de {filename}. Se omite.")
+
+    if processed_data:
+        update_excel_report(processed_data, merge_existing=True)
+    elif os.path.exists(NO_PROCESADOS_DIR):
+        # Regenerar si es necesario (limpiar si no hay nada en NO PROCESADOS)
+        update_excel_report([], merge_existing=True)
+
+    print(f"\nProcesamiento terminado. Se procesaron {len(processed_data)} facturas.")
+    print(f"Resultados guardados en: {EXCEL_FILE}")
+    return processed_data
+
+if __name__ == "__main__":
+    main()
