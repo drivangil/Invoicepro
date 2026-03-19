@@ -375,7 +375,6 @@
                 const res = await fetch('/status');
                 const data = await res.json();
                 pendingEl.textContent = data.no_procesados;
-                pendingEl.textContent = data.no_procesados;
                 doneEl.textContent = data.procesados;
                 
                 if (data.no_procesados === 0) {
@@ -384,16 +383,6 @@
                 } else {
                     processBtn.disabled = false;
                     btnText.textContent = "Iniciar Procesamiento";
-                }
-
-                if (data.records && data.records.length > 0) {
-                    renderResults(data.records);
-                    openExcelBtn.style.display = "inline-flex";
-                    downloadBtn.style.display = "inline-flex";
-                } else {
-                    resultsContainer.style.display = "none";
-                    openExcelBtn.style.display = "none";
-                    downloadBtn.style.display = "none";
                 }
             } catch (err) {
                 console.error("Error fetching status", err);

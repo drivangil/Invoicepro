@@ -63,8 +63,7 @@ def status():
     print(f"DEBUG: Revisando PENDIENTES en {NO_PROCESADOS_DIR}")
     return jsonify({
         'no_procesados': session_pending_count,
-        'procesados': session_processed_count,
-        'records': process_invoices.get_grouped_records()
+        'procesados': session_processed_count
     })
 
 @app.route('/process', methods=['POST'])
