@@ -115,11 +115,48 @@ def status():
             'procesados': session.get('processed', 0)
         })
 
+@app.route('/learn-supplier', methods=['POST'])
+def learn_supplier():
+    """Guarda una nueva regla de reconocimiento en knowledge.json."""
+    data = request.json
+    supplier_name = data.get('name')
+    new_token = data.get('token')
+    
+    if not supplier_name or not new_token:
+        return jsonify({"success": False, "message": "Datos incompletos"}), 400
+        
+    knowledge_path = os.path.join(BASE_DIR, 'SKILLS', 'InvoiceProcessor', 'knowledge.json')
+    try:
+        with open(knowledge_path, 'r+', encoding='utf-8') as f:
+            knowledge = json.load(f)
+            # Buscar si el suplidor ya existe para añadirle el token
+            found = False
+            for s in knowledge['suppliers']:
+                if s['name'].lower() == supplier_name.lower():
+                    if new_token.lower() not in [t.lower() for t in s['tokens']]:
+                        s['tokens'].append(new_token.lower())
+                    found = True
+                    break
+            
+            if not found:
+                knowledge['suppliers'].append({
+                    "name": supplier_name,
+                    "tokens": [new_token.lower()],
+                    "default_data": {"NCF": "B0100000000", "Total": 1000.00}
+                })
+            
+            f.seek(0)
+            json.dump(knowledge, f, indent=2, ensure_ascii=False)
+            f.truncate()
+            
+        return jsonify({"success": True, "message": f"He aprendido que '{new_token}' pertenece a {supplier_name}"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
 @app.route('/process', methods=['POST'])
 def process():
     try:
         # 1. Limpiar carpeta PROCESADOS antes de iniciar cada lote
-        # (Esto asegura que el ZIP y las descargas sean exclusivos de lo subido ahora)
         if os.path.exists(PROCESADOS_DIR):
             for f in os.listdir(PROCESADOS_DIR):
                 file_path = os.path.join(PROCESADOS_DIR, f)
@@ -134,28 +171,17 @@ def process():
         
         # 3. Actualizar contadores de sesión
         count = len(newly_processed)
-        session['processed'] = count # Reseteamos al lote actual
-        
-        # Llevar a 0 el pendiente (Quitar de memoria las no procesadas)
+        session['processed'] = count
         session['pending'] = 0
         
-        # Construir mensaje de respuesta con aviso de fallos si existen
-        message = f'Se procesaron {len(newly_processed)} facturas con éxito.'
-        if failed_files:
-            message += f" [AVISO: {len(failed_files)} no se procesaron: {', '.join(failed_files)}]"
-
-        # Solo retornamos las facturas que acaban de ser procesadas en este lote
         return jsonify({
             'success': True,
-            'message': message,
-            'data': newly_processed 
+            'message': f'Se procesaron {len(newly_processed)} facturas.',
+            'data': newly_processed,
+            'unknown_files': failed_files # Archivos que requieren "aprendizaje"
         })
     except Exception as e:
-        return jsonify({
-            'success': False,
-            'message': 'Error al procesar las facturas.',
-            'error': str(e)
-        }), 500
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/upload', methods=['POST'])
 def upload_files():

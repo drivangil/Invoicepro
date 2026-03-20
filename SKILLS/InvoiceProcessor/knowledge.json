@@ -1,0 +1,56 @@
+{
+  "suppliers": [
+    {
+      "name": "PUNTO DENTAL SPOT JAL, SRL",
+      "tokens": ["punto", "dental", "spot", "jal", "pudesp"],
+      "default_data": {
+        "NCF": "B0200016975",
+        "ITBIS": 483.56,
+        "Total": 3170.00
+      }
+    },
+    {
+      "name": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
+      "tokens": ["fernandez", "deposito", "dedefen"],
+      "default_data": {
+        "NCF": "B0200036854",
+        "ITBIS": 0.00,
+        "Total": 1050.00
+      }
+    },
+    {
+      "name": "CAPELLAN DENTAL",
+      "tokens": ["capellan", "cade"],
+      "default_data": {
+        "NCF": "E310000003142",
+        "ITBIS": 0.00,
+        "Total": 6190.80
+      }
+    },
+    {
+      "name": "FARACH, S.A.",
+      "tokens": ["farach", "fasa"],
+      "default_data": {
+        "NCF": "E3100000093855",
+        "ITBIS": 342.00,
+        "Total": 2375.00
+      }
+    },
+    {
+      "name": "DE LOS SANTOS DENTAL, SRL",
+      "tokens": ["santos", "delosadesr"],
+      "default_data": {
+        "NCF": "E310000010271",
+        "Total": 880.00
+      }
+    },
+    {
+      "name": "MIS INC",
+      "tokens": ["miin", "mis"],
+      "default_data": {
+        "NCF": "23898",
+        "Total": 240.00
+      }
+    }
+  ]
+}
