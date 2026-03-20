@@ -55,28 +55,24 @@ def get_extracted_data_mock(filename):
         # Intentar extraer fecha del filename (YYYYMMDD)
         import re
         date_match = re.search(r'(\d{8})', filename)
-        date_str = "19/03/2026" # Default
+        
+        # Datos base del suplidor del JSON (Knowledge)
+        base = best_supplier.get("default_data", {})
+        date_str = base.get("Fecha", "19/03/2026")
+        
         if date_match:
             d = date_match.group(1)
             date_str = f"{d[6:8]}/{d[4:6]}/{d[0:4]}"
-        
-        # Datos base del suplidor (NCF, ITBIS, Total)
-        base = best_supplier.get("default_data", {})
         
         return {
             "Suplidor": supplier_name,
             "Fecha": date_str,
             "Factura": base.get("Factura", "SN-" + filename[:5]),
             "NCF": base.get("NCF", "B0100000000"),
-            "Fecha Vencimiento": date_str,
+            "Fecha Vencimiento": base.get("Fecha Vencimiento", date_str),
             "ITBIS": base.get("ITBIS", 0.00),
             "Total": base.get("Total", 1000.00)
         }
-
-    # 3. Mapeo legacy para las 18 imágenes (si no se detectó por tokens)
-    if "01.jpeg" in file_lower:
-        return {"Suplidor": "CAPELLAN DENTAL", "Fecha": "19/03/2026", "NCF": "E310000003142", "Total": 6190.80}
-    # ... (podríamos migrar todos a knowledge.json eventualmente)
     
     return None
     return None
