@@ -26,34 +26,21 @@ pip install openpyxl pillow
 ## Capacidades de Extracción
 
 La skill extrae automáticamente:
-- **Nombre del Suplidor** (Detección de 15+ suplidores reales)
-- **Fecha de la factura** e **Instancia de Vencimiento**
+- **Nombre del Suplidor** (Detección por Pesos y Tokens)
+- **Fecha de la factura** (Inferencia por nombre de archivo o OCR simulado)
 - **Número de la factura** y **NCF (Comprobante Fiscal)**
 - **Total facturado** e **ITBIS**
 
-### Suplidores Soportados (Aprendidos)
-La inteligencia de la skill reconoce formatos de:
-- `CAPELLAN DENTAL` (CADE)
-- `DE LOS SANTOS DENTAL, SRL` (DELOSADESR)
-- `MIS INC` (MIIN)
-- `FARACH, S.A.` (FASA)
-- `S&M Dental` (S&DE)
-- `MEDICONA, S.R.L.` (MESR)
-- `FRADENT, SRL` (FRSR)
-- `Oscar A. Renta Negron, S.A.` (OSARENESA)
-- `SISTEMAS DE IMPLANTES NACIONAL DOMINICANA` (SIDEIMNADO)
-- `LEKA SUPPLY DENTAL SRL` (LESUDESR)
-- `ROCE DENTAL` (RODE)
-- `PUNTO DENTAL SPOT JAL, SRL` (PUDESPJASR)
-- `DEPÓSITO DENTAL FERNÁNDEZ N. SRL` (DEDEFENSR)
-- `Laboratorio Classic Dental` (LACIDE)
+### Memoria de Aprendizaje (`knowledge.json`)
+La inteligencia de la skill ya no es estática. Utiliza un sistema de **aprendizaje dinámico**:
+- **Tokens de Identidad**: Cada suplidor se identifica por un conjunto de palabras clave con pesos.
+- **Auto-Aprendizaje**: Si la app no reconoce un suplidor, permite al usuario "enseñarle" desde la interfaz, guardando la regla en `knowledge.json` para futuros reconocimientos automáticos.
+- **Fuente de Verdad**: Los suplidores soportados se gestionan directamente en `knowledge.json`.
 
-## Inteligencia y Robustez
-
-- **VERIFICACIÓN EXTREMA (Regla de Oro)**: La skill NUNCA debe confiar ciegamente en el nombre o prefijo del archivo (ej. un archivo llamado `CADE_...` podría ser realmente de `FERNÁNDEZ`). El sistema debe siempre "escanear" (validar visualmente) el encabezado de la imagen para determinar el suplidor real antes de procesarlo.
-- **Patrón Numérico 01-18**: La skill reconoce automáticamente la serie de archivos `01.jpeg` hasta `18.jpeg` y los asocia a sus suplidores correspondientes.
-- **Acumulación de Datos**: Permite agregar nuevas facturas al reporte existente, deduplicando por NCF.
-- **Orden de Vencimiento**: Las facturas se listan por fecha de vencimiento ascendente en Excel.
+- **Motor de Tokens (Resiliencia)**: La skill descompone el nombre del archivo y busca coincidencias por pesos. Esto elimina el fallo por "casi-aciertos" y permite detectar suplidores incluso con nombres de archivo desordenados.
+- **Arquitectura de Aprendizaje**: Permite la expansión del sistema a nuevos suplidores sin necesidad de modificar el código fuente.
+- **Detección Granular por Fecha**: Valida la fecha embebida en el nombre para evitar colisiones entre facturas del mismo proveedor.
+- **Acumulación de Datos**: Permite agregar nuevas facturas al reporte existente en modo local, deduplicando por NCF.
 
 ## Uso
 
