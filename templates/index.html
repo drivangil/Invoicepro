@@ -521,8 +521,30 @@
             downloadZipBtn.style.display = "inline-flex";
         }
 
-        // Carga inicial
-        updateStatus();
+        // Carga inicial y configuración de entorno
+        async function initApp() {
+            try {
+                const res = await fetch('/config');
+                const config = await res.json();
+                
+                if (config.is_local) {
+                    // Ocultar el contenedor de "Subir Facturas" en local
+                    const uploadWrapper = uploadBtn.parentElement;
+                    if (uploadWrapper) {
+                        uploadWrapper.style.display = 'none';
+                        // Expandir el botón de procesamiento para que ocupe todo el ancho
+                        processBtn.parentElement.style.flex = '100%';
+                    }
+                    console.log("Modo Local detectado: Ocultando botón de subida.");
+                }
+            } catch (err) {
+                console.error("Error cargando configuración", err);
+            }
+            // Actualizar estado inicial (esto contará archivos en /NO PROCESADOS automáticamente en local)
+            updateStatus();
+        }
+
+        initApp();
     </script>
 </body>
 </html>

@@ -91,14 +91,29 @@ def index():
     session['processed'] = 0
     return render_template('index.html')
 
+@app.route('/config')
+def config():
+    """Indica a la app si está en entorno local o online."""
+    is_local = platform.system() == 'Windows'
+    return jsonify({'is_local': is_local})
+
 @app.route('/status')
 def status():
-    # Debug para confirmar ruta
-    print(f"DEBUG: Revisando PENDIENTES en {NO_PROCESADOS_DIR}")
-    return jsonify({
-        'no_procesados': session.get('pending', 0),
-        'procesados': session.get('processed', 0)
-    })
+    is_local = platform.system() == 'Windows'
+    if is_local:
+        # En local, el estado depende de lo que haya físicamente en la carpeta
+        pending_count = count_files(NO_PROCESADOS_DIR)
+        processed_count = session.get('processed', 0)
+        return jsonify({
+            'no_procesados': pending_count,
+            'procesados': processed_count
+        })
+    else:
+        # En online, dependemos de la sesión (lo que se acaba de subir)
+        return jsonify({
+            'no_procesados': session.get('pending', 0),
+            'procesados': session.get('processed', 0)
+        })
 
 @app.route('/process', methods=['POST'])
 def process():
