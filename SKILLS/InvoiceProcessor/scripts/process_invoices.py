@@ -33,60 +33,97 @@ def get_extracted_data_mock(filename):
     file_lower = filename.lower()
     knowledge = load_knowledge()
     
-    # 1. Encontrar el mejor suplidor por tokens
+    # 1. Tokenización avanzada (más separadores)
+    import re
+    # Reemplazar cualquier cosa que no sea alfanumérica por espacios
+    clean_filename = re.sub(r'[^a-zA-Z0-9]', ' ', file_lower)
+    filename_tokens = clean_filename.split()
+    
+    print(f"\nDEBUG DETECCIÓN: {filename}")
+    print(f"Tokens detectados en archivo: {filename_tokens}")
+
+    # 2. Encontrar el mejor suplidor por tokens
     best_supplier = None
     max_score = 0
-    filename_tokens = file_lower.replace("_", " ").replace("-", " ").replace(".", " ").split()
+    match_details = ""
 
     for s in knowledge.get("suppliers", []):
         score = 0
-        for token in s.get("tokens", []):
-            # Usar coincidencia exacta con los tokens del archivo para evitar
-            # que "01" (Capellan) matchee con la fecha "20260101"
-            if token.lower() in filename_tokens:
-                score += 2 # Peso alto para coincidencia exacta de palabra
-            elif token.lower() in file_lower:
-                score += 0.5 # Peso bajo para coincidencia de subcadena
+        tokens_matched = []
+        name_lower = s["name"].lower()
         
+        # A) Coincidencia por tokens específicos
+        for token in s.get("tokens", []):
+            token_l = token.lower()
+            # Coincidencia exacta de palabra (Token completo en filename_tokens)
+            if token_l in filename_tokens:
+                score += 3  # Aumentado de 2 a 3 para dar prioridad a tokens claros
+                tokens_matched.append(f"EXACT:{token_l}")
+            # Coincidencia de subcadena (Solo si el token NO es puramente numérico corto)
+            elif token_l in file_lower:
+                if token_l.isdigit() and len(token_l) <= 2:
+                    # Evitar que "01" matchee con "2026"
+                    # Solo matchea si está rodeado de no-dígitos en el filename
+                    # (aunque si no está en filename_tokens ya sabemos que no estaba rodeado de espacios)
+                    pass 
+                else:
+                    score += 0.8 # Aumentado de 0.5 a 0.8
+                    tokens_matched.append(f"SUB:{token_l}")
+        
+        # B) Coincidencia por nombre completo del suplidor
+        # Si el nombre del suplidor (o partes significativas) está en el filename
+        if name_lower in file_lower or any(word in filename_tokens for word in name_lower.split() if len(word) > 3):
+            score += 2
+            tokens_matched.append("NAME_MATCH")
+
+        if score > 0:
+            print(f"  > Candidato: {s['name']} | Score: {score} | Motivos: {tokens_matched}")
+
         if score > max_score:
             max_score = score
             best_supplier = s
+            match_details = f"Tokens: {tokens_matched}"
+        elif score == max_score and score > 0:
+            # Desempate por longitud del nombre (nombres más específicos suelen ser mejores)
+            if len(s["name"]) > len(best_supplier["name"]):
+                best_supplier = s
 
-    # 2. Si hay un suplidor detectado, construir el objeto de datos
-    if best_supplier and max_score > 0:
+    # 3. Si hay un suplidor detectado, construir el objeto de datos
+    if best_supplier and max_score >= 1.0: # Umbral ajustado: 1.0 permite acrónimos claros
         supplier_name = best_supplier["name"]
-        
+        print(f"RESULTADO: Detectado como '{supplier_name}' (Score {max_score})")
+
         # Intentar extraer fecha del filename (YYYYMMDD)
-        import re
         date_match = re.search(r'(\d{8})', filename)
         
         # Datos base del suplidor del JSON (Knowledge)
         base = best_supplier.get("default_data", {}).copy()
-        date_str = base.get("Fecha", "19/03/2026")
+        # Fecha por defecto: hoy
+        date_str = datetime.now().strftime("%d/%m/%Y")
         
         if date_match:
             d = date_match.group(1)
             date_str = f"{d[6:8]}/{d[4:6]}/{d[0:4]}"
         
-        # BUSCAR OVERRIDES (Granularidad)
+        # BUSCAR OVERRIDES (Granularidad por fecha)
         overrides = best_supplier.get("overrides", [])
         for ov in overrides:
             if ov.get("date") == date_str:
-                print(f"DEBUG: Aplicando override granular para {supplier_name} en fecha {date_str}")
+                print(f"  Override: Aplicando datos específicos para fecha {date_str}")
                 base.update(ov.get("data", {}))
                 break
         
         return {
             "Suplidor": supplier_name,
             "Fecha": date_str,
-            "Factura": base.get("Factura", "SN-" + filename[:5]),
+            "Factura": base.get("Factura", "SN-" + (filename_tokens[0].upper() if filename_tokens else "0000")),
             "NCF": base.get("NCF", "B0100000000"),
             "Fecha Vencimiento": base.get("Fecha Vencimiento", date_str),
             "ITBIS": base.get("ITBIS", 0.00),
             "Total": base.get("Total", 1000.00)
         }
     
-    return None
+    print(f"RESULTADO: Suplidor no identificado para {filename}")
     return None
 
 def generate_new_filename(supplier_name, date_str, original_filename):

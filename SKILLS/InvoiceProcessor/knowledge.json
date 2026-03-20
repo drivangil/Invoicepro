@@ -2,7 +2,7 @@
   "suppliers": [
     {
       "name": "PUNTO DENTAL SPOT JAL, SRL",
-      "tokens": ["punto", "dental", "spot", "jal", "pudesp", "12", "16"],
+      "tokens": ["punto", "dental", "spot", "jal", "pudesp", "pudespjasr", "12", "16"],
       "default_data": {
         "NCF": "B0200016975",
         "Total": 3170.00
@@ -24,7 +24,7 @@
     },
     {
       "name": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
-      "tokens": ["fernandez", "deposito", "dedefen", "13", "14", "15"],
+      "tokens": ["fernandez", "deposito", "dedefen", "dedefensr", "13", "14", "15"],
       "default_data": {
         "NCF": "B0200036854",
         "Total": 1050.00
