@@ -26,6 +26,20 @@ def load_knowledge():
             return json.load(f)
     return {"suppliers": []}
 
+def get_override_for_file(filename, knowledge):
+    """Busca en el knowledge base si este archivo tiene datos específicos (overrides)."""
+    for s in knowledge.get("suppliers", []):
+        f_overrides = s.get("filename_overrides", {})
+        for ov_key, ov_val in f_overrides.items():
+            ov_key_l = ov_key.lower()
+            filename_l = filename.lower()
+            # Coincidencia exacta o parcial significativa
+            if ov_key_l == filename_l or (len(ov_key_l) > 4 and (ov_key_l in filename_l or filename_l in ov_key_l)):
+                data = ov_val.copy()
+                data["Suplidor"] = s["name"]
+                return data
+    return None
+
 def get_extracted_data_mock(filename):
     """
     Extracción inteligente basada en Motor de Tokens y Knowledge Base.
@@ -34,43 +48,31 @@ def get_extracted_data_mock(filename):
     knowledge = load_knowledge()
     
     # 1. VERDAD VISUAL: Prioridad máxima si el nombre de archivo es conocido
-    # Mejorado: Búsqueda flexible de overrides (ej. '01.jpeg' matchea con 'Factura_01.jpeg')
-    for s in knowledge.get("suppliers", []):
-        f_overrides = s.get("filename_overrides", {})
-        # Buscar coincidencia exacta o parcial significativa
-        match_found = False
-        override_data = {}
+    override_data = get_override_for_file(filename, knowledge)
+    if override_data:
+        print(f"VERDAD VISUAL: Archivo {filename} identificado con override.")
         
-        for ov_key, ov_val in f_overrides.items():
-            if ov_key == filename or (len(ov_key) > 4 and (ov_key in filename or filename in ov_key)):
-                match_found = True
-                override_data = ov_val
-                break
+        # Lógica de Fecha
+        fecha_inv_str = override_data.get("Fecha", datetime.now().strftime("%d/%m/%Y"))
+        fecha_inv = parse_date(fecha_inv_str)
         
-        if match_found:
-            print(f"VERDAD VISUAL: Archivo {filename} identificado positivamente como '{s['name']}' (vía {ov_key})")
-            
-            # Lógica de Fecha
-            fecha_inv_str = override_data.get("Fecha", datetime.now().strftime("%d/%m/%Y"))
-            fecha_inv = parse_date(fecha_inv_str)
-            
-            # Lógica de Vencimiento: Si no existe, +30 días de la fecha de factura
-            if "Fecha Vencimiento" in override_data:
-                fecha_venc_str = override_data["Fecha Vencimiento"]
-            else:
-                from datetime import timedelta
-                fecha_venc = (fecha_inv if fecha_inv != datetime.min else datetime.now()) + timedelta(days=30)
-                fecha_venc_str = fecha_venc.strftime("%d/%m/%Y")
+        # Lógica de Vencimiento
+        if "Fecha Vencimiento" in override_data:
+            fecha_venc_str = override_data["Fecha Vencimiento"]
+        else:
+            from datetime import timedelta
+            fecha_venc = (fecha_inv if fecha_inv != datetime.min else datetime.now()) + timedelta(days=30)
+            fecha_venc_str = fecha_venc.strftime("%d/%m/%Y")
 
-            return {
-                "Suplidor": s["name"],
-                "Fecha": fecha_inv_str,
-                "Factura": override_data.get("Factura", "SN-" + filename[:5]),
-                "NCF": override_data.get("NCF", "B0100000000"),
-                "Fecha Vencimiento": fecha_venc_str,
-                "ITBIS": override_data.get("ITBIS", 0.00),
-                "Total": override_data.get("Total", 1000.00)
-            }
+        return {
+            "Suplidor": override_data["Suplidor"],
+            "Fecha": fecha_inv_str,
+            "Factura": override_data.get("Factura", "SN-" + filename[:5]),
+            "NCF": override_data.get("NCF", "B0100000000"),
+            "Fecha Vencimiento": fecha_venc_str,
+            "ITBIS": override_data.get("ITBIS", 0.00),
+            "Total": override_data.get("Total", 1000.00)
+        }
 
     # 2. Tokenización avanzada (si no es un archivo conocido)
     import re
@@ -196,29 +198,45 @@ def generate_new_filename(supplier_name, date_str, original_filename):
 
 
 def load_all_records():
-    """Carga todos los registros actuales del Excel para poder re-ordenarlos."""
+    """Carga todos los registros actuales del Excel aplicando overrides de knowledge.json."""
     records = []
+    knowledge = load_knowledge()
+    
     if os.path.exists(EXCEL_FILE):
         try:
             wb = load_workbook(EXCEL_FILE)
             ws = wb.active
-            # Asumimos que la primera fila es el encabezado
-            # Salta las filas de subtotal (las que tienen "Subtotal" en la primera columna)
             for row in ws.iter_rows(min_row=2, values_only=True):
-                # Solo cargar filas que parecen ser de factura (no resumen, pagos o totales previos)
                 if row[0] and all(k not in str(row[0]).upper() for k in ("RESUMEN", "SUPLIDOR", "PAGOS", "TOTAL")):
-                    # Asegurarse de que la fila tenga suficientes columnas para ser una factura
                     if len(row) >= 7 and row[0] is not None and row[0] != "":
-                        records.append({
+                        archivo = row[7] if len(row) > 7 else (row[6] if len(row) > 6 else "")
+                        
+                        rec = {
                             "Suplidor": row[0],
                             "Fecha": row[1],
                             "Factura": row[2],
                             "NCF": row[3],
                             "Fecha Vencimiento": row[4],
-                            "ITBIS": row[5] if len(row) > 7 else 0, # Nueva columna ITBIS
+                            "ITBIS": row[5] if len(row) > 7 else 0,
                             "Total": row[6] if len(row) > 7 else row[5],
-                            "Archivo": row[7] if len(row) > 7 else (row[6] if len(row) > 6 else "")
-                        })
+                            "Archivo": archivo
+                        }
+                        
+                        # APLICAR OVERRIDE SI EXISTE (Esto hace que knowledge.json sea la "Verdad")
+                        if archivo:
+                            ov = get_override_for_file(archivo, knowledge)
+                            if ov:
+                                rec.update({
+                                    "Suplidor": ov.get("Suplidor", rec["Suplidor"]),
+                                    "Fecha": ov.get("Fecha", rec["Fecha"]),
+                                    "Factura": ov.get("Factura", rec["Factura"]),
+                                    "NCF": ov.get("NCF", rec["NCF"]),
+                                    "Fecha Vencimiento": ov.get("Fecha Vencimiento", rec["Fecha Vencimiento"]),
+                                    "ITBIS": ov.get("ITBIS", rec["ITBIS"]),
+                                    "Total": ov.get("Total", rec["Total"])
+                                })
+                        
+                        records.append(rec)
         except Exception as e:
             print(f"Error al cargar Excel: {e}")
     return records
@@ -242,11 +260,16 @@ def update_excel_report(new_data_list, merge_existing=False):
     if merge_existing:
         existing_invoices = load_all_records()
     
-    # Unir con los nuevos (Deduplicación por NCF)
-    records_dict = {str(r['NCF']).strip(): r for r in existing_invoices}
+    # Unir con los nuevos (Deduplicación por Archivo primero, luego NCF)
+    # Usamos Archivo como clave principal si existe, si no NCF
+    records_dict = {}
+    for r in existing_invoices:
+        key = r.get('Archivo') or str(r['NCF']).strip()
+        records_dict[key] = r
+        
     for new_rec in new_data_list:
-        ncf_key = str(new_rec['NCF']).strip()
-        records_dict[ncf_key] = new_rec
+        key = new_rec.get('Archivo') or str(new_rec['NCF']).strip()
+        records_dict[key] = new_rec
             
     all_unique_invoices = list(records_dict.values())
     
@@ -269,8 +292,15 @@ def update_excel_report(new_data_list, merge_existing=False):
     for cell in ws[1]:
         cell.font = header_font
         
-    total_itbis = sum(inv.get("ITBIS", 0) or 0 for inv in all_unique_invoices)
-    total_monto = sum(inv.get("Total", 0) or 0 for inv in all_unique_invoices)
+    def safe_float(v):
+        try:
+            if v is None or v == "": return 0.0
+            return float(str(v).replace(',', ''))
+        except:
+            return 0.0
+
+    total_itbis = sum(safe_float(inv.get("ITBIS", 0)) for inv in all_unique_invoices)
+    total_monto = sum(safe_float(inv.get("Total", 0)) for inv in all_unique_invoices)
     
     for inv in all_unique_invoices:
         ws.append([
@@ -279,8 +309,8 @@ def update_excel_report(new_data_list, merge_existing=False):
             inv["Factura"],
             inv["NCF"],
             inv.get("Fecha Vencimiento", ""),
-            inv.get("ITBIS", ""),
-            inv["Total"],
+            safe_float(inv.get("ITBIS", 0)),
+            safe_float(inv.get("Total", 0)),
             inv.get("Archivo", "")
         ])
 

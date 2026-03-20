@@ -121,35 +121,116 @@ def learn_supplier():
     data = request.json
     supplier_name = data.get('name')
     new_token = data.get('token')
+    # Nuevos campos opcionales para valores por defecto
+    default_ncf = data.get('ncf', 'B0100000000')
+    default_itbis = float(data.get('itbis', 0))
+    default_total = float(data.get('total', 1000))
     
     if not supplier_name or not new_token:
         return jsonify({"success": False, "message": "Datos incompletos"}), 400
         
     knowledge_path = os.path.join(BASE_DIR, 'SKILLS', 'InvoiceProcessor', 'knowledge.json')
     try:
-        with open(knowledge_path, 'r+', encoding='utf-8') as f:
-            knowledge = json.load(f)
-            # Buscar si el suplidor ya existe para añadirle el token
-            found = False
-            for s in knowledge['suppliers']:
-                if s['name'].lower() == supplier_name.lower():
-                    if new_token.lower() not in [t.lower() for t in s['tokens']]:
-                        s['tokens'].append(new_token.lower())
-                    found = True
-                    break
-            
-            if not found:
-                knowledge['suppliers'].append({
-                    "name": supplier_name,
-                    "tokens": [new_token.lower()],
-                    "default_data": {"NCF": "B0100000000", "Total": 1000.00}
+        if not os.path.exists(knowledge_path):
+            knowledge = {"suppliers": []}
+        else:
+            with open(knowledge_path, 'r', encoding='utf-8') as f:
+                knowledge = json.load(f)
+
+        # Buscar si el suplidor ya existe para añadirle el token
+        found = False
+        for s in knowledge['suppliers']:
+            if s['name'].lower() == supplier_name.lower():
+                if new_token.lower() not in [t.lower() for t in s['tokens']]:
+                    s['tokens'].append(new_token.lower())
+                # Actualizar datos por defecto si se proporcionan
+                if 'default_data' not in s: s['default_data'] = {}
+                s['default_data'].update({
+                    "NCF": default_ncf,
+                    "ITBIS": default_itbis,
+                    "Total": default_total
                 })
-            
-            f.seek(0)
+                found = True
+                break
+        
+        if not found:
+            knowledge['suppliers'].append({
+                "name": supplier_name,
+                "tokens": [new_token.lower()],
+                "default_data": {
+                    "NCF": default_ncf, 
+                    "ITBIS": default_itbis, 
+                    "Total": default_total
+                }
+            })
+        
+        with open(knowledge_path, 'w', encoding='utf-8') as f:
             json.dump(knowledge, f, indent=2, ensure_ascii=False)
-            f.truncate()
             
         return jsonify({"success": True, "message": f"He aprendido que '{new_token}' pertenece a {supplier_name}"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+@app.route('/edit-record', methods=['POST'])
+def edit_record():
+    """Guarda una corrección para una factura específica en knowledge.json y actualiza el Excel."""
+    data = request.json
+    supplier_name = data.get('supplier')
+    filename = data.get('filename') # El nombre de archivo original o el nuevo
+    
+    if not supplier_name or not filename:
+        return jsonify({"success": False, "message": "Faltan datos del suplidor o archivo"}), 400
+
+    knowledge_path = os.path.join(BASE_DIR, 'SKILLS', 'InvoiceProcessor', 'knowledge.json')
+    try:
+        with open(knowledge_path, 'r', encoding='utf-8') as f:
+            knowledge = json.load(f)
+        
+        # 1. Buscar el suplidor
+        target_supplier = None
+        for s in knowledge['suppliers']:
+            if s['name'].lower() == supplier_name.lower():
+                target_supplier = s
+                break
+        
+        if not target_supplier:
+            return jsonify({"success": False, "message": "Suplidor no encontrado en la base de conocimientos"}), 404
+        
+        # 2. Guardar el override por nombre de archivo
+        if 'filename_overrides' not in target_supplier:
+            target_supplier['filename_overrides'] = {}
+            
+        # Limpiar el nombre de archivo (usar solo el basename por si viene con ruta)
+        basename = os.path.basename(filename)
+        
+        target_supplier['filename_overrides'][basename] = {
+            "Fecha": data.get('fecha'),
+            "Factura": data.get('factura'),
+            "NCF": data.get('ncf'),
+            "Fecha Vencimiento": data.get('vencimiento'),
+            "ITBIS": float(data.get('itbis', 0)),
+            "Total": float(data.get('total', 0))
+        }
+        
+        with open(knowledge_path, 'w', encoding='utf-8') as f:
+            json.dump(knowledge, f, indent=2, ensure_ascii=False)
+            
+        # 3. Forzar actualización del reporte Excel
+        # Cargamos todos los registros (que ahora incluirán el nuevo override al ser procesados)
+        # Pero como queremos que sea inmediato, podemos re-procesar o simplemente avisar.
+        # Lo más robusto es re-generar el excel con los nuevos datos.
+        
+        # Para simplificar, devolvemos éxito y el frontend puede pedir un refresh o re-procesar.
+        # Pero mejor intentamos actualizar el Excel directamente si estamos en local.
+        is_local = platform.system() == 'Windows'
+        if is_local:
+            # Re-procesamos para que el Excel se actualice con la nueva "verdad" de knowledge.json
+            process_invoices.main()
+            
+        return jsonify({
+            "success": True, 
+            "message": f"Registro actualizado para {basename}. El sistema recordará estos valores."
+        })
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 

@@ -363,9 +363,67 @@
                 <input type="text" id="learn-token" placeholder="Escribe un prefijo identificador...">
             </div>
 
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="input-group">
+                    <label>ITBIS Inicial</label>
+                    <input type="number" id="learn-itbis" placeholder="0.00" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Total Inicial</label>
+                    <input type="number" id="learn-total" placeholder="1000.00" step="0.01">
+                </div>
+            </div>
+
             <div class="modal-footer">
-                <button class="btn-cancel" onclick="closeModal()">Omitir</button>
+                <button class="btn-cancel" onclick="closeModal('learning-modal')">Omitir</button>
                 <button class="btn-process" style="flex: 2; padding: 12px;" onclick="saveLearning()">Enseñar a la Skill</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Nuevo Modal de Edición -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-title">Corregir Factura</div>
+            <p class="modal-desc" id="edit-filename-label">Archivo: ...</p>
+            
+            <input type="hidden" id="edit-filename">
+            
+            <div class="input-group">
+                <label>Suplidor</label>
+                <input type="text" id="edit-supplier">
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="input-group">
+                    <label>Fecha (DD/MM/YYYY)</label>
+                    <input type="text" id="edit-fecha">
+                </div>
+                <div class="input-group">
+                    <label>NCF</label>
+                    <input type="text" id="edit-ncf">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="input-group">
+                    <label>ITBIS</label>
+                    <input type="number" id="edit-itbis" step="0.01">
+                </div>
+                <div class="input-group">
+                    <label>Total</label>
+                    <input type="number" id="edit-total" step="0.01">
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Vencimiento (DD/MM/YYYY)</label>
+                <input type="text" id="edit-vencimiento">
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeModal('edit-modal')">Cancelar</button>
+                <button class="btn-process" style="flex: 2; padding: 12px; background: var(--accent-green);" onclick="saveEdit()">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -539,9 +597,9 @@
             document.getElementById('learning-modal').style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('learning-modal').style.display = 'none';
-            if (pendingUnknown.length > 0) {
+        function closeModal(modalId) {
+            document.getElementById(modalId || 'learning-modal').style.display = 'none';
+            if (modalId === 'learning-modal' && pendingUnknown.length > 0) {
                 pendingUnknown.shift();
                 if (pendingUnknown.length > 0) {
                     showLearningModal(pendingUnknown[0]);
@@ -552,9 +610,11 @@
         async function saveLearning() {
             const name = document.getElementById('learn-name').value;
             const token = document.getElementById('learn-token').value;
+            const itbis = document.getElementById('learn-itbis').value;
+            const total = document.getElementById('learn-total').value;
             
             if (!name || !token) {
-                alert("Por favor completa ambos campos.");
+                alert("Por favor completa al menos el nombre y la palabra clave.");
                 return;
             }
 
@@ -562,17 +622,67 @@
                 const res = await fetch('/learn-supplier', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, token })
+                    body: JSON.stringify({ name, token, itbis, total })
                 });
                 const data = await res.json();
                 if (data.success) {
                     alert(data.message);
-                    closeModal();
+                    closeModal('learning-modal');
                     // Opcional: Re-procesar automáticamente tras aprender
                     processBtn.click();
                 }
             } catch (err) {
                 alert("Error al guardar aprendizaje.");
+            }
+        }
+
+        // --- FUNCIONES DE EDICIÓN ---
+        let currentEditingData = null;
+
+        function openEditModal(entryStr) {
+            const entry = JSON.parse(decodeURIComponent(entryStr));
+            currentEditingData = entry;
+            
+            document.getElementById('edit-filename-label').textContent = `Archivo: ${entry.Archivo}`;
+            document.getElementById('edit-filename').value = entry.Archivo;
+            document.getElementById('edit-supplier').value = entry.Suplidor;
+            document.getElementById('edit-fecha').value = entry.Fecha;
+            document.getElementById('edit-ncf').value = entry.NCF;
+            document.getElementById('edit-itbis').value = entry.ITBIS;
+            document.getElementById('edit-total').value = entry.Total;
+            document.getElementById('edit-vencimiento').value = entry['Fecha Vencimiento'] || '';
+            
+            document.getElementById('edit-modal').style.display = 'flex';
+        }
+
+        async function saveEdit() {
+            const payload = {
+                filename: document.getElementById('edit-filename').value,
+                supplier: document.getElementById('edit-supplier').value,
+                fecha: document.getElementById('edit-fecha').value,
+                ncf: document.getElementById('edit-ncf').value,
+                itbis: document.getElementById('edit-itbis').value,
+                total: document.getElementById('edit-total').value,
+                vencimiento: document.getElementById('edit-vencimiento').value
+            };
+
+            try {
+                const res = await fetch('/edit-record', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("¡Cambios guardados! El Excel ha sido actualizado.");
+                    closeModal('edit-modal');
+                    // Re-procesar para refrescar la tabla con la nueva "verdad"
+                    processBtn.click();
+                } else {
+                    alert("Error: " + data.message);
+                }
+            } catch (err) {
+                alert("Error de conexión al guardar cambios.");
             }
         }
 
@@ -623,6 +733,7 @@
                 sumTotal += (entry.Total || 0);
 
                 const row = document.createElement('tr');
+                const entryJson = encodeURIComponent(JSON.stringify(entry));
                 row.innerHTML = `
                     <td>${entry.Suplidor}</td>
                     <td>${entry.Fecha}</td>
@@ -630,9 +741,12 @@
                     <td>${entry['Fecha Vencimiento'] || '-'}</td>
                     <td class="price-tag" style="text-align: right;">${entry.ITBIS ? '$' + entry.ITBIS.toLocaleString() : '-'}</td>
                     <td class="price-tag" style="text-align: right;">$${entry.Total.toLocaleString()}</td>
-                    <td style="text-align: center;">
-                        <a href="/download-file/${entry.Archivo}" class="btn-download" title="Descargar Imagen" style="padding: 4px 8px; font-size: 0.7rem;">
-                            📥 JPG
+                    <td style="text-align: center; display: flex; gap: 4px; justify-content: center;">
+                        <button onclick="openEditModal('${entryJson}')" class="btn-download" title="Corregir datos" style="padding: 4px 8px; font-size: 0.7rem; border-color: var(--accent-blue);">
+                            ✏️ Editar
+                        </button>
+                        <a href="/download-file/${entry.Archivo}" class="btn-download" title="Ver comprobante" style="padding: 4px 8px; font-size: 0.7rem;">
+                            🖼️ Ver
                         </a>
                     </td>
                 `;
