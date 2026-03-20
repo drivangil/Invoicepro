@@ -34,19 +34,42 @@ def get_extracted_data_mock(filename):
     knowledge = load_knowledge()
     
     # 1. VERDAD VISUAL: Prioridad máxima si el nombre de archivo es conocido
+    # Mejorado: Búsqueda flexible de overrides (ej. '01.jpeg' matchea con 'Factura_01.jpeg')
     for s in knowledge.get("suppliers", []):
         f_overrides = s.get("filename_overrides", {})
-        if filename in f_overrides:
-            data = f_overrides[filename]
-            print(f"VERDAD VISUAL: Archivo {filename} identificado positivamente como '{s['name']}'")
+        # Buscar coincidencia exacta o parcial significativa
+        match_found = False
+        override_data = {}
+        
+        for ov_key, ov_val in f_overrides.items():
+            if ov_key == filename or (len(ov_key) > 4 and (ov_key in filename or filename in ov_key)):
+                match_found = True
+                override_data = ov_val
+                break
+        
+        if match_found:
+            print(f"VERDAD VISUAL: Archivo {filename} identificado positivamente como '{s['name']}' (vía {ov_key})")
+            
+            # Lógica de Fecha
+            fecha_inv_str = override_data.get("Fecha", datetime.now().strftime("%d/%m/%Y"))
+            fecha_inv = parse_date(fecha_inv_str)
+            
+            # Lógica de Vencimiento: Si no existe, +30 días de la fecha de factura
+            if "Fecha Vencimiento" in override_data:
+                fecha_venc_str = override_data["Fecha Vencimiento"]
+            else:
+                from datetime import timedelta
+                fecha_venc = (fecha_inv if fecha_inv != datetime.min else datetime.now()) + timedelta(days=30)
+                fecha_venc_str = fecha_venc.strftime("%d/%m/%Y")
+
             return {
                 "Suplidor": s["name"],
-                "Fecha": data.get("Fecha", datetime.now().strftime("%d/%m/%Y")),
-                "Factura": data.get("Factura", "SN-" + filename[:5]),
-                "NCF": data.get("NCF", "B0100000000"),
-                "Fecha Vencimiento": data.get("Fecha Vencimiento", data.get("Fecha")),
-                "ITBIS": data.get("ITBIS", 0.00),
-                "Total": data.get("Total", 1000.00)
+                "Fecha": fecha_inv_str,
+                "Factura": override_data.get("Factura", "SN-" + filename[:5]),
+                "NCF": override_data.get("NCF", "B0100000000"),
+                "Fecha Vencimiento": fecha_venc_str,
+                "ITBIS": override_data.get("ITBIS", 0.00),
+                "Total": override_data.get("Total", 1000.00)
             }
 
     # 2. Tokenización avanzada (si no es un archivo conocido)
@@ -129,12 +152,23 @@ def get_extracted_data_mock(filename):
                 base.update(ov.get("data", {}))
                 break
         
+        # Lógica de Fecha
+        inv_date = parse_date(date_str)
+        
+        # Lógica de Vencimiento mejorada: 30 días si no se especifica
+        if "Fecha Vencimiento" in base:
+            venc_str = base["Fecha Vencimiento"]
+        else:
+            from datetime import timedelta
+            venc_date = (inv_date if inv_date != datetime.min else datetime.now()) + timedelta(days=30)
+            venc_str = venc_date.strftime("%d/%m/%Y")
+            
         return {
             "Suplidor": supplier_name,
             "Fecha": date_str,
             "Factura": base.get("Factura", "SN-" + (filename_tokens[0].upper() if filename_tokens else "0000")),
             "NCF": base.get("NCF", "B0100000000"),
-            "Fecha Vencimiento": base.get("Fecha Vencimiento", date_str),
+            "Fecha Vencimiento": venc_str,
             "ITBIS": base.get("ITBIS", 0.00),
             "Total": base.get("Total", 1000.00)
         }
