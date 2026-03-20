@@ -29,12 +29,14 @@ La skill extrae automáticamente:
 - **Nombre del Suplidor** (Detección por Pesos y Tokens)
 - **Fecha de la factura** (Inferencia por nombre de archivo o OCR simulado)
 - **Número de la factura** y **NCF (Comprobante Fiscal)**
-- **Total facturado** e **ITBIS**
+- **Total facturado e ITBIS** (Matching de archivo flexible y persistente)
+- **Vencimiento Inteligente** (+30 días automático si no se detecta)
 
 ### Memoria de Aprendizaje (`knowledge.json`)
 La inteligencia de la skill ya no es estática. Utiliza un sistema de **aprendizaje dinámico**:
 - **Tokens de Identidad**: Cada suplidor se identifica por un conjunto de palabras clave con pesos.
 - **Auto-Aprendizaje**: Si la app no reconoce un suplidor, permite al usuario "enseñarle" desde la interfaz, guardando la regla en `knowledge.json` para futuros reconocimientos automáticos.
+- **Matching Flexible**: El sistema asocia datos históricos incluso si el nombre del archivo subido es diferente (ej. `Factura_02.jpg` matchea con `02.jpg`), permitiendo una mayor tasa de acierto en la nube.
 - **Fuente de Verdad**: Los suplidores soportados se gestionan directamente en `knowledge.json`.
 
 - **Motor de Tokens (Resiliencia)**: La skill descompone el nombre del archivo y busca coincidencias por pesos. Esto elimina el fallo por "casi-aciertos" y permite detectar suplidores incluso con nombres de archivo desordenados.
