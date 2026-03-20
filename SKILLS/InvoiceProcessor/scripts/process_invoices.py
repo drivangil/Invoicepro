@@ -41,8 +41,12 @@ def get_extracted_data_mock(filename):
     for s in knowledge.get("suppliers", []):
         score = 0
         for token in s.get("tokens", []):
-            if token.lower() in file_lower:
-                score += 1
+            # Usar coincidencia exacta con los tokens del archivo para evitar
+            # que "01" (Capellan) matchee con la fecha "20260101"
+            if token.lower() in filename_tokens:
+                score += 2 # Peso alto para coincidencia exacta de palabra
+            elif token.lower() in file_lower:
+                score += 0.5 # Peso bajo para coincidencia de subcadena
         
         if score > max_score:
             max_score = score
@@ -57,12 +61,20 @@ def get_extracted_data_mock(filename):
         date_match = re.search(r'(\d{8})', filename)
         
         # Datos base del suplidor del JSON (Knowledge)
-        base = best_supplier.get("default_data", {})
+        base = best_supplier.get("default_data", {}).copy()
         date_str = base.get("Fecha", "19/03/2026")
         
         if date_match:
             d = date_match.group(1)
             date_str = f"{d[6:8]}/{d[4:6]}/{d[0:4]}"
+        
+        # BUSCAR OVERRIDES (Granularidad)
+        overrides = best_supplier.get("overrides", [])
+        for ov in overrides:
+            if ov.get("date") == date_str:
+                print(f"DEBUG: Aplicando override granular para {supplier_name} en fecha {date_str}")
+                base.update(ov.get("data", {}))
+                break
         
         return {
             "Suplidor": supplier_name,

@@ -4,29 +4,43 @@
       "name": "PUNTO DENTAL SPOT JAL, SRL",
       "tokens": ["punto", "dental", "spot", "jal", "pudesp", "12", "16"],
       "default_data": {
-        "Fecha": "17/03/2026",
         "NCF": "B0200016975",
-        "ITBIS": 483.56,
         "Total": 3170.00
-      }
+      },
+      "overrides": [
+        {
+          "date": "09/03/2026",
+          "data": { "Factura": "0013665", "NCF": "B0200016858", "ITBIS": 558.22, "Total": 3075.00 }
+        },
+        {
+          "date": "17/03/2026",
+          "data": { "Factura": "0013724", "NCF": "B0200016975", "ITBIS": 483.56, "Total": 3170.00 }
+        },
+        {
+          "date": "19/03/2026",
+          "data": { "Factura": "0013744", "NCF": "B0200017007", "ITBIS": 137.29, "Total": 2440.00 }
+        }
+      ]
     },
     {
       "name": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
       "tokens": ["fernandez", "deposito", "dedefen", "13", "14", "15"],
       "default_data": {
-        "Fecha": "20/03/2026",
         "NCF": "B0200036854",
-        "ITBIS": 0.00,
         "Total": 1050.00
-      }
+      },
+      "overrides": [
+        {
+          "date": "20/03/2026",
+          "data": { "Factura": "B0200036854", "NCF": "B0200036854", "ITBIS": 0.00, "Total": 1050.00 }
+        }
+      ]
     },
     {
       "name": "CAPELLAN DENTAL",
       "tokens": ["capellan", "cade", "01", "18"],
       "default_data": {
-        "Fecha": "19/03/2026",
         "NCF": "E310000003142",
-        "ITBIS": 0.00,
         "Total": 6190.80
       }
     },
@@ -34,9 +48,7 @@
       "name": "FARACH, S.A.",
       "tokens": ["farach", "fasa", "04"],
       "default_data": {
-        "Fecha": "06/03/2026",
         "NCF": "E3100000093855",
-        "ITBIS": 342.00,
         "Total": 2375.00
       }
     },
@@ -44,9 +56,7 @@
       "name": "DE LOS SANTOS DENTAL, SRL",
       "tokens": ["santos", "delosadesr", "02"],
       "default_data": {
-        "Fecha": "18/03/2026",
         "NCF": "E310000010271",
-        "ITBIS": 134.24,
         "Total": 880.00
       }
     },
@@ -54,83 +64,8 @@
       "name": "MIS INC",
       "tokens": ["miin", "mis", "03"],
       "default_data": {
-        "Fecha": "18/03/2026",
         "NCF": "23898",
         "Total": 240.00
-      }
-    },
-    {
-      "name": "S&M Dental",
-      "tokens": ["s&m", "05"],
-      "default_data": {
-        "Fecha": "06/03/2026",
-        "NCF": "B01000015101",
-        "ITBIS": 247.78,
-        "Total": 1624.34
-      }
-    },
-    {
-      "name": "MEDICONA, S.R.L.",
-      "tokens": ["medicona", "06"],
-      "default_data": {
-        "Fecha": "16/03/2026",
-        "NCF": "B01000015084",
-        "ITBIS": 35.08,
-        "Total": 230.00
-      }
-    },
-    {
-      "name": "FRADENT, SRL",
-      "tokens": ["fradent", "07"],
-      "default_data": {
-        "Fecha": "09/03/2026",
-        "NCF": "E3100000018329",
-        "Total": 376.00
-      }
-    },
-    {
-      "name": "Oscar A. Renta Negron, S.A.",
-      "tokens": ["renta", "negron", "oscar", "08"],
-      "default_data": {
-        "Fecha": "05/03/2026",
-        "NCF": "E3100000048082",
-        "Total": 1201.53
-      }
-    },
-    {
-      "name": "SISTEMAS DE IMPLANTES NACIONAL DOMINICANA",
-      "tokens": ["implantes", "nacional", "09"],
-      "default_data": {
-        "Fecha": "16/03/2026",
-        "NCF": "A202602606",
-        "Total": 48.00
-      }
-    },
-    {
-      "name": "LEKA SUPPLY DENTAL SRL",
-      "tokens": ["leka", "10"],
-      "default_data": {
-        "Fecha": "23/01/2026",
-        "NCF": "1561",
-        "Total": 500.00
-      }
-    },
-    {
-      "name": "ROCE DENTAL",
-      "tokens": ["roce", "11"],
-      "default_data": {
-        "Fecha": "26/02/2026",
-        "NCF": "E310000016820",
-        "Total": 78942.00
-      }
-    },
-    {
-      "name": "Laboratorio Classic Dental",
-      "tokens": ["classic", "lacide", "17"],
-      "default_data": {
-        "Fecha": "18/02/2026",
-        "NCF": "44843",
-        "Total": 5000.00
       }
     }
   ]
