@@ -1,5 +1,6 @@
 import os
 import shutil
+import platform
 from datetime import datetime
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Font
@@ -287,11 +288,17 @@ def main():
             print(f"No se pudieron extraer datos de {filename}. Se omite.")
             failed_data.append(filename)
 
+    # Lógica de Persistencia Diferenciada:
+    # - Local (Windows): Agrega al Excel existente si lo encuentra (Mantiene historial local).
+    # - Online (Linux/Render): Siempre empieza desde cero (Aislamiento de lote).
+    is_local = platform.system() == 'Windows'
+    merge_val = True if (is_local and os.path.exists(EXCEL_FILE)) else False
+
     if processed_data:
-        update_excel_report(processed_data, merge_existing=True)
+        update_excel_report(processed_data, merge_existing=merge_val)
     elif os.path.exists(NO_PROCESADOS_DIR) and not files:
-        # Regenerar si es necesario (limpiar si no hay nada en NO PROCESADOS y no hubo archivos para procesar)
-        update_excel_report([], merge_existing=True)
+        # Regenerar si es necesario
+        update_excel_report([], merge_existing=merge_val)
 
     print(f"\nProcesamiento terminado. Se procesaron {len(processed_data)} facturas.")
     print(f"Resultados guardados en: {EXCEL_FILE}")

@@ -103,12 +103,23 @@ def status():
 @app.route('/process', methods=['POST'])
 def process():
     try:
-        # Ejecutar la skill (procesa nuevos y actualiza Excel)
+        # 1. Limpiar carpeta PROCESADOS antes de iniciar cada lote
+        # (Esto asegura que el ZIP y las descargas sean exclusivos de lo subido ahora)
+        if os.path.exists(PROCESADOS_DIR):
+            for f in os.listdir(PROCESADOS_DIR):
+                file_path = os.path.join(PROCESADOS_DIR, f)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print(f"Error al limpiar {file_path}: {e}")
+
+        # 2. Ejecutar la skill
         newly_processed, failed_files = process_invoices.main()
         
-        # Actualizar contadores de sesión
+        # 3. Actualizar contadores de sesión
         count = len(newly_processed)
-        session['processed'] = session.get('processed', 0) + count
+        session['processed'] = count # Reseteamos al lote actual
         
         # Llevar a 0 el pendiente (Quitar de memoria las no procesadas)
         session['pending'] = 0
