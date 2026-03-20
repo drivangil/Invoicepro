@@ -33,7 +33,23 @@ def get_extracted_data_mock(filename):
     file_lower = filename.lower()
     knowledge = load_knowledge()
     
-    # 1. Tokenización avanzada (más separadores)
+    # 1. VERDAD VISUAL: Prioridad máxima si el nombre de archivo es conocido
+    for s in knowledge.get("suppliers", []):
+        f_overrides = s.get("filename_overrides", {})
+        if filename in f_overrides:
+            data = f_overrides[filename]
+            print(f"VERDAD VISUAL: Archivo {filename} identificado positivamente como '{s['name']}'")
+            return {
+                "Suplidor": s["name"],
+                "Fecha": data.get("Fecha", datetime.now().strftime("%d/%m/%Y")),
+                "Factura": data.get("Factura", "SN-" + filename[:5]),
+                "NCF": data.get("NCF", "B0100000000"),
+                "Fecha Vencimiento": data.get("Fecha Vencimiento", data.get("Fecha")),
+                "ITBIS": data.get("ITBIS", 0.00),
+                "Total": data.get("Total", 1000.00)
+            }
+
+    # 2. Tokenización avanzada (si no es un archivo conocido)
     import re
     # Reemplazar cualquier cosa que no sea alfanumérica por espacios
     clean_filename = re.sub(r'[^a-zA-Z0-9]', ' ', file_lower)

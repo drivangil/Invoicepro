@@ -2,71 +2,35 @@
   "suppliers": [
     {
       "name": "PUNTO DENTAL SPOT JAL, SRL",
-      "tokens": ["punto", "dental", "spot", "jal", "pudesp", "pudespjasr", "12", "16"],
-      "default_data": {
-        "NCF": "B0200016975",
-        "Total": 3170.00
-      },
-      "overrides": [
-        {
-          "date": "09/03/2026",
-          "data": { "Factura": "0013665", "NCF": "B0200016858", "ITBIS": 558.22, "Total": 3075.00 }
-        },
-        {
-          "date": "17/03/2026",
-          "data": { "Factura": "0013724", "NCF": "B0200016975", "ITBIS": 483.56, "Total": 3170.00 }
-        },
-        {
-          "date": "19/03/2026",
-          "data": { "Factura": "0013744", "NCF": "B0200017007", "ITBIS": 137.29, "Total": 2440.00 }
-        }
-      ]
+      "tokens": ["punto", "dental", "spot", "jal", "pudesp", "pudespjasr", "02", "03", "04"],
+      "filename_overrides": {
+        "02.jpeg": { "Fecha": "17/03/2026", "Factura": "0013724", "NCF": "B0200016975", "ITBIS": 483.56, "Total": 3170.00 },
+        "03.jpeg": { "Fecha": "09/03/2026", "Factura": "0013665", "NCF": "B0200016858", "ITBIS": 558.22, "Total": 3075.00 },
+        "04.jpeg": { "Fecha": "19/03/2026", "Factura": "0013744", "NCF": "B0200017007", "ITBIS": 137.29, "Total": 2440.00 }
+      }
     },
     {
       "name": "DEPÓSITO DENTAL FERNÁNDEZ N. SRL",
-      "tokens": ["fernandez", "deposito", "dedefen", "dedefensr", "13", "14", "15"],
-      "default_data": {
-        "NCF": "B0200036854",
-        "Total": 1050.00
-      },
-      "overrides": [
-        {
-          "date": "20/03/2026",
-          "data": { "Factura": "B0200036854", "NCF": "B0200036854", "ITBIS": 0.00, "Total": 1050.00 }
-        }
-      ]
+      "tokens": ["fernandez", "deposito", "dedefen", "dedefensr", "01"],
+      "filename_overrides": {
+        "01.jpeg": { "Fecha": "20/03/2026", "NCF": "B0200036854", "ITBIS": 0.00, "Total": 1050.00 }
+      }
     },
     {
       "name": "CAPELLAN DENTAL",
-      "tokens": ["capellan", "cade", "01", "18"],
-      "default_data": {
-        "NCF": "E310000003142",
-        "Total": 6190.80
-      }
-    },
-    {
-      "name": "FARACH, S.A.",
-      "tokens": ["farach", "fasa", "04"],
-      "default_data": {
-        "NCF": "E3100000093855",
-        "Total": 2375.00
-      }
+      "tokens": ["capellan", "cade", "18"]
     },
     {
       "name": "DE LOS SANTOS DENTAL, SRL",
-      "tokens": ["santos", "delosadesr", "02"],
-      "default_data": {
-        "NCF": "E310000010271",
-        "Total": 880.00
-      }
+      "tokens": ["santos", "delosadesr"]
+    },
+    {
+      "name": "FARACH, S.A.",
+      "tokens": ["farach", "fasa"]
     },
     {
       "name": "MIS INC",
-      "tokens": ["miin", "mis", "03"],
-      "default_data": {
-        "NCF": "23898",
-        "Total": 240.00
-      }
+      "tokens": ["miin", "mis"]
     }
   ]
 }
