@@ -21,8 +21,10 @@ wheels/
 .installed.cfg
 *.egg
 
-# Excel locks
+# Excel locks and generated reports
 ~$*.xlsx
+Reporte_HACAMS_*.xlsx
+facturas.xlsx
 
 # Environments
 .env
@@ -30,6 +32,13 @@ wheels/
 venv/
 ENV/
 
+# Database
+db.sqlite3
+
+# Media
+media/
+
 # IDEs
 .vscode/
 .idea/
+.DS_Store

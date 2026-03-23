@@ -1,2 +1,0 @@
-# Invoicepro
-Procesador de facturas
