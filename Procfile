@@ -1,1 +1,1 @@
-web: gunicorn HACAMSWEB2.wsgi
+web: gunicorn InvoicePro.wsgi

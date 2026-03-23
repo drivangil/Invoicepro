@@ -31,7 +31,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'HACAMSWEB2.urls'
+ROOT_URLCONF = 'InvoicePro.urls'
 
 TEMPLATES = [
     {
@@ -50,7 +50,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'HACAMSWEB2.wsgi.application'
+WSGI_APPLICATION = 'InvoicePro.wsgi.application'
 
 db_url = os.getenv('DATABASE_URL')
 if db_url and (db_url.startswith('postgres') or db_url.startswith('postgresql')):
