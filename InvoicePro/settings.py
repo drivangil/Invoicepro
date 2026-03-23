@@ -53,12 +53,23 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'InvoicePro.wsgi.application'
 
-if os.getenv('DATABASE_URL'):
+db_url = os.getenv('DATABASE_URL')
+if db_url and '://' in db_url:
     DATABASES = {
-        'default': dj_database_url.config(
+        'default': dj_database_url.parse(
+            db_url,
             conn_max_age=600,
             ssl_require=True
         )
+    }
+elif db_url:
+     # Si hay algo pero no tiene ://, es sumamente sospechoso
+    print("WARNING: DATABASE_URL exists but is malformed.")
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
 else:
     DATABASES = {
