@@ -10,6 +10,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-default')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*']
+if os.getenv('RENDER_EXTERNAL_HOSTNAME'):
+    ALLOWED_HOSTS.append(os.getenv('RENDER_EXTERNAL_HOSTNAME'))
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -53,23 +55,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'InvoicePro.wsgi.application'
 
+# Render/Production Database
 db_url = os.getenv('DATABASE_URL')
-if db_url and '://' in db_url:
+if db_url:
     DATABASES = {
-        'default': dj_database_url.parse(
-            db_url,
+        'default': dj_database_url.config(
+            default=db_url,
             conn_max_age=600,
+            conn_health_checks=True,
             ssl_require=True
         )
-    }
-elif db_url:
-     # Si hay algo pero no tiene ://, es sumamente sospechoso
-    print("WARNING: DATABASE_URL exists but is malformed.")
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
     }
 else:
     DATABASES = {

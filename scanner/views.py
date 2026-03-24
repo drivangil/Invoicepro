@@ -10,6 +10,8 @@ import os
 from datetime import datetime
 import openpyxl
 from openpyxl.styles import Font, Alignment
+from io import BytesIO
+from django.http import HttpResponse, FileResponse
 
 @login_required
 def dashboard_view(request):
@@ -85,14 +87,27 @@ def export_excel_view(request):
                         max_length = max(max_length, len(str(cell.value)))
                 ws.column_dimensions[col[0].column_letter].width = max_length + 2
             
-            filename = f"Reporte_HACAMS_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-            filepath = os.path.join(os.getcwd(), filename)
-            wb.save(filepath)
-            os.startfile(filepath)
+            filename = f"Reporte_InvoicePro_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
             
-            return JsonResponse({'success': True})
+            if os.name == 'nt':
+                # Local Windows behavior: save and open
+                filepath = os.path.join(os.getcwd(), filename)
+                wb.save(filepath)
+                os.startfile(filepath)
+                return JsonResponse({'success': True})
+            else:
+                # Production/Linux behavior: binary download
+                output = BytesIO()
+                wb.save(output)
+                output.seek(0)
+                response = HttpResponse(
+                    output.read(),
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+                response['Content-Disposition'] = f'attachment; filename="{filename}"'
+                return response
         except Exception as e:
-            return JsonResponse({'success': False, 'message': str(e)})
+            return JsonResponse({'success': False, 'message': str(e)}, status=500)
     return JsonResponse({'success': False})
 
 @csrf_exempt
